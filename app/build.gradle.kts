@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     id("kotlin-kapt")
+    // alias(libs.plugins.jetbrains.compose)
 }
 
 android {
@@ -31,7 +32,6 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
-    }
 
     kotlinOptions {
         jvmTarget = "11"
@@ -46,8 +46,18 @@ android {
     }
 }
 
+configurations.all {
+    resolutionStrategy {
+        // Forces the newer version of Guava
+        force("com.google.guava:guava:31.1-android")
+        // Exclude the standalone listenablefuture artifact
+        exclude(group = "com.google.guava", module = "listenablefuture")
+    }
+}
+
 dependencies {
     // Compose
+    implementation(platform("androidx.compose:compose-bom:${libs.versions.composeBom.get()}"))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
@@ -76,9 +86,16 @@ dependencies {
     implementation("com.squareup.moshi:moshi-kotlin:1.15.0")
     kapt("com.squareup.moshi:moshi-kotlin-codegen:1.15.0")
 
-    // Docker Api client
-    implementation("com.github.docker-java:docker-java-core:3.3.4")
-    implementation("com.github.docker-java:docker-java-transport-okhttp:3.3.4")
+    // Docker Api client - Add exclude for redundant Guava dependency
+    implementation("com.github.docker-java:docker-java-core:3.3.4") {
+        exclude(group = "com.google.guava", module = "guava")
+    }
+    implementation("com.github.docker-java:docker-java-transport-okhttp:3.3.4") {
+        exclude(group = "com.google.guava", module = "guava")
+    }
+
+    // Add explicit dependency on a newer Guava version
+    implementation("com.google.guava:guava:31.1-android")
 
     // MPAndroidChart
     implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
@@ -91,4 +108,4 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.ui.test.junit4)
-}
+}}

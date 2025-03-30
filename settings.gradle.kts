@@ -9,6 +9,7 @@ pluginManagement {
         }
         mavenCentral()
         gradlePluginPortal()
+        maven("https://maven.pkg.jetbrains.space/public/p/compose/dev") // Ajoutez cette ligne
     }
 }
 dependencyResolutionManagement {
@@ -17,8 +18,8 @@ dependencyResolutionManagement {
         google()
         mavenCentral()
         maven { url = uri("https://jitpack.io") }
+        // maven { url = uri("https://maven.pkg.jetbrains.space/public/p/compose/dev") } // Ajoutez cette ligne
     }
 }
-
-rootProject.name = "Docker App"
-include(":app")
+include(":appModule")
+project(":appModule").projectDir = File(rootDir, "app/")
