@@ -54,6 +54,16 @@ android {
         compose = true
     }
 
+    // Correction de la syntaxe des sourceSets
+    sourceSets {
+        getByName("main") {
+            res.srcDirs(
+                "src/main/res",
+                "src/main/res/font"
+            )
+        }
+    }
+
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.4"
     }
@@ -129,6 +139,9 @@ dependencies {
 
     // DataStore
     implementation("androidx.datastore:datastore-preferences:1.1.4")
+
+    // SystemUiController pour la gestion de la barre d'état
+    implementation("com.google.accompanist:accompanist-systemuicontroller:0.32.0")
 
     // Tests
     testImplementation(libs.junit)
