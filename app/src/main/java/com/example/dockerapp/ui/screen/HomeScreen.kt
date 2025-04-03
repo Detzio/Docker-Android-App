@@ -22,10 +22,7 @@ fun HomeScreen(
             CenterAlignedTopAppBar(
                 title = { Text("Docker App") },
                 actions = {
-                    IconButton(onClick = {
-                        viewModel.logout()
-                        onLogout()
-                    }) {
+                    IconButton(onClick = onLogout) {
                         Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Déconnexion")
                     }
                 }

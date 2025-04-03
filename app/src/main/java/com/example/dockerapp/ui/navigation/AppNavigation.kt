@@ -3,6 +3,10 @@ package com.example.dockerapp.ui.navigation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -18,6 +22,25 @@ fun AppNavigation(
     loginViewModel: LoginViewModel = viewModel()
 ) {
     val isAuthenticated by loginViewModel.isAuthenticated.collectAsState()
+    var isLoggingOut by remember { mutableStateOf(false) }
+    
+    // Observer pour détecter la déconnexion
+    LaunchedEffect(isAuthenticated) {
+        if (!isAuthenticated && isLoggingOut) {
+            // Si on vient de se déconnecter, naviguer vers la page de connexion
+            navController.navigate(AppScreen.Login.route) {
+                popUpTo(0) { inclusive = true } // Effacer tout le stack de navigation
+            }
+            isLoggingOut = false
+        }
+    }
+    
+    val handleLogout = remember {
+        {
+            isLoggingOut = true
+            loginViewModel.logout()
+        }
+    }
     
     NavHost(
         navController = navController,
@@ -36,11 +59,8 @@ fun AppNavigation(
         
         composable(AppScreen.Home.route) {
             HomeScreen(
-                onLogout = {
-                    navController.navigate(AppScreen.Login.route) {
-                        popUpTo(AppScreen.Home.route) { inclusive = true }
-                    }
-                }
+                onLogout = handleLogout,
+                viewModel = loginViewModel
             )
         }
     }

@@ -10,17 +10,20 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.dockerapp.ui.navigation.AppNavigation
 import com.example.dockerapp.ui.theme.DockerAppTheme
+import com.example.dockerapp.ui.viewmodel.LoginViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            val loginViewModel: LoginViewModel = viewModel()
+            
             DockerAppTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    AppNavigation()
+                    AppNavigation(loginViewModel = loginViewModel)
                 }
             }
         }

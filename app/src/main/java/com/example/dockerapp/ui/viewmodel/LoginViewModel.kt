@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.dockerapp.data.db.AppDatabase
 import com.example.dockerapp.data.repository.AuthRepository
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -19,6 +20,10 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     private val _isAuthenticated = MutableStateFlow(false)
     val isAuthenticated: StateFlow<Boolean> = _isAuthenticated
     
+    // Flag pour éviter de vérifier les identifiants après une déconnexion
+    private var checkingEnabled = true
+    private var credentialCheckJob: Job? = null
+    
     init {
         val database = AppDatabase.getDatabase(application)
         repository = AuthRepository(database.userCredentialsDao())
@@ -26,12 +31,22 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     }
     
     private fun checkSavedCredentials() {
-        viewModelScope.launch {
+        // Annuler tout job existant avant d'en créer un nouveau
+        credentialCheckJob?.cancel()
+        
+        if (!checkingEnabled) return
+        
+        credentialCheckJob = viewModelScope.launch {
             repository.getActiveCredentials().collect { credentials ->
-                if (credentials != null) {
-                    // Tentative de connexion automatique
-                    val success = repository.login(credentials.username, credentials.password)
-                    _isAuthenticated.value = success
+                // Ne procéder que si le checking est toujours activé
+                if (credentials != null && checkingEnabled) {
+                    try {
+                        val success = repository.login(credentials.username, credentials.password)
+                        _isAuthenticated.value = success
+                    } catch (e: Exception) {
+                        // Gérer les erreurs silencieusement pour la connexion automatique
+                        _isAuthenticated.value = false
+                    }
                 }
             }
         }
@@ -44,6 +59,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 val success = repository.login(username, password)
                 if (success) {
+                    checkingEnabled = true
                     _loginState.value = LoginState.Success
                     _isAuthenticated.value = true
                 } else {
@@ -56,15 +72,32 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     }
     
     fun logout() {
+        // Annuler d'abord le job de vérification des identifiants
+        credentialCheckJob?.cancel()
+        
+        // Désactiver le checking et effectuer la déconnexion
+        checkingEnabled = false
+        
         viewModelScope.launch {
-            repository.logout()
-            _isAuthenticated.value = false
-            _loginState.value = LoginState.Idle
+            try {
+                repository.logout()
+            } finally {
+                // Mettre à jour l'état même en cas d'erreur
+                _isAuthenticated.value = false
+                _loginState.value = LoginState.Idle
+            }
         }
     }
     
+    // Réinitialiser l'état de connexion
     fun resetLoginState() {
         _loginState.value = LoginState.Idle
+    }
+    
+    // Assurer le nettoyage lors de la destruction du ViewModel
+    override fun onCleared() {
+        super.onCleared()
+        credentialCheckJob?.cancel()
     }
     
     sealed class LoginState {
