@@ -8,5 +8,6 @@ data class UserCredentials(
     @PrimaryKey
     val username: String,
     val password: String,
+    val serverUrl: String,
     val isActive: Boolean = true
 )

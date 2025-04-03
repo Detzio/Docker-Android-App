@@ -21,6 +21,7 @@ fun LoginScreen(
 ) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var serverUrl by remember { mutableStateOf("") } // Valeur par défaut
     var isPasswordVisible by remember { mutableStateOf(false) }
     
     val loginState by viewModel.loginState.collectAsState()
@@ -47,6 +48,22 @@ fun LoginScreen(
                 color = MaterialTheme.colorScheme.primary,
                 fontSize = 32.sp,
                 modifier = Modifier.padding(bottom = 32.dp)
+            )
+            
+            // Champ pour l'URL du serveur
+            OutlinedTextField(
+                value = serverUrl,
+                onValueChange = { serverUrl = it },
+                label = { Text("URL du serveur") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Uri,
+                    imeAction = ImeAction.Next
+                ),
+                supportingText = { Text("Exemple: https://exemple.sh:2377 (sans /info)") }
             )
             
             OutlinedTextField(
@@ -79,11 +96,11 @@ fun LoginScreen(
             )
             
             Button(
-                onClick = { viewModel.login(username, password) },
+                onClick = { viewModel.login(username, password, serverUrl) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
-                enabled = username.isNotEmpty() && password.isNotEmpty() && loginState != LoginViewModel.LoginState.Loading
+                enabled = username.isNotEmpty() && password.isNotEmpty() && serverUrl.isNotEmpty() && loginState != LoginViewModel.LoginState.Loading
             ) {
                 if (loginState == LoginViewModel.LoginState.Loading) {
                     CircularProgressIndicator(

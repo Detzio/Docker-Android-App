@@ -7,14 +7,14 @@ import kotlinx.coroutines.flow.Flow
 
 class AuthRepository(private val userCredentialsDao: UserCredentialsDao) {
     
-    suspend fun login(username: String, password: String): Boolean {
-        RetrofitClient.setCredentials(username, password)
+    suspend fun login(username: String, password: String, serverUrl: String): Boolean {
+        RetrofitClient.setCredentials(username, password, serverUrl)
         
         return try {
             val response = RetrofitClient.apiService.getInfo()
             if (response.isSuccessful) {
                 // Sauvegarde des identifiants en local si la connexion est réussie
-                saveCredentials(username, password)
+                saveCredentials(username, password, serverUrl)
                 true
             } else {
                 false
@@ -25,11 +25,11 @@ class AuthRepository(private val userCredentialsDao: UserCredentialsDao) {
         }
     }
     
-    suspend fun saveCredentials(username: String, password: String) {
+    suspend fun saveCredentials(username: String, password: String, serverUrl: String) {
         // Désactive tous les identifiants existants avant d'en ajouter un nouveau
         userCredentialsDao.deactivateAllCredentials()
         // Sauvegarde les nouveaux identifiants comme actifs
-        userCredentialsDao.saveCredentials(UserCredentials(username, password, isActive = true))
+        userCredentialsDao.saveCredentials(UserCredentials(username, password, serverUrl, isActive = true))
     }
     
     fun getActiveCredentials(): Flow<UserCredentials?> {

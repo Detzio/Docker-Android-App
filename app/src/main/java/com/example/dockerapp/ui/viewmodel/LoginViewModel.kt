@@ -41,7 +41,11 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                 // Ne procéder que si le checking est toujours activé
                 if (credentials != null && checkingEnabled) {
                     try {
-                        val success = repository.login(credentials.username, credentials.password)
+                        val success = repository.login(
+                            credentials.username, 
+                            credentials.password,
+                            credentials.serverUrl
+                        )
                         _isAuthenticated.value = success
                     } catch (e: Exception) {
                         // Gérer les erreurs silencieusement pour la connexion automatique
@@ -52,12 +56,12 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
     
-    fun login(username: String, password: String) {
+    fun login(username: String, password: String, serverUrl: String) {
         viewModelScope.launch {
             _loginState.value = LoginState.Loading
             
             try {
-                val success = repository.login(username, password)
+                val success = repository.login(username, password, serverUrl)
                 if (success) {
                     checkingEnabled = true
                     _loginState.value = LoginState.Success

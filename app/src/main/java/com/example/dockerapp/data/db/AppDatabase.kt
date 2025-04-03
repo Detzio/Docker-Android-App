@@ -6,7 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.dockerapp.data.model.UserCredentials
 
-@Database(entities = [UserCredentials::class], version = 1, exportSchema = false)
+@Database(entities = [UserCredentials::class], version = 2, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userCredentialsDao(): UserCredentialsDao
     
@@ -20,7 +20,9 @@ abstract class AppDatabase : RoomDatabase() {
                     context.applicationContext,
                     AppDatabase::class.java,
                     "docker_app_database"
-                ).build()
+                )
+                .fallbackToDestructiveMigration() // Pour gérer la migration de version
+                .build()
                 INSTANCE = instance
                 instance
             }
