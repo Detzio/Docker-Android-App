@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import retrofit2.http.Query
 
 class HomeViewModel : ViewModel() {
     private val _containers = MutableStateFlow<List<Container>>(emptyList())
@@ -127,6 +128,53 @@ class HomeViewModel : ViewModel() {
             } catch (e: Exception) {
                 _error.value = "Erreur: ${e.message}"
             }
+        }
+    }
+
+    fun loadContainerStats(containerId: String) {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.apiService.getContainerStats(containerId, stream = false)
+                if (response.isSuccessful) {
+                    val stats = response.body()
+                    stats?.let { containerStats ->
+                        val cpuPercentage = containerStats.calculateCpuPercentage()
+                        val memoryUsage = containerStats.memoryStats.usage
+                        
+                        Log.d("HomeViewModel", "Container $containerId stats: CPU=$cpuPercentage%, Memory=${memoryUsage}B")
+                        
+                        val updatedContainers = _containers.value.map { container ->
+                            if (container.id == containerId) {
+                                container.copy(
+                                    cpuUsage = cpuPercentage,
+                                    memoryUsage = memoryUsage
+                                )
+                            } else {
+                                container
+                            }
+                        }
+                        _containers.value = updatedContainers
+                    }
+                } else {
+                    Log.e("HomeViewModel", "Erreur stats conteneur $containerId: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                Log.e("HomeViewModel", "Erreur stats conteneur $containerId", e)
+            }
+        }
+    }
+
+    fun refreshContainersStats() {
+        viewModelScope.launch {
+            _containers.value
+                .filter { it.state.lowercase() == "running" }
+                .forEach { container ->
+                    try {
+                        loadContainerStats(container.id)
+                    } catch (e: Exception) {
+                        Log.e("HomeViewModel", "Erreur refresh stats ${container.id}", e)
+                    }
+                }
         }
     }
 }

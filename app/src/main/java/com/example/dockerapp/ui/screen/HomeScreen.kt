@@ -8,18 +8,25 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.dockerapp.data.model.Container
 import com.example.dockerapp.ui.viewmodel.HomeViewModel
 import com.example.dockerapp.ui.viewmodel.LoginViewModel
+import com.example.dockerapp.ui.theme.*
+import androidx.compose.material3.TextFieldDefaults
+import kotlinx.coroutines.delay
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,18 +46,35 @@ fun HomeScreen(
         homeViewModel.loadContainers()
     }
 
+    // Actualiser les statistiques toutes les 5 secondes pour les conteneurs en cours d'exécution
+    LaunchedEffect(Unit) {
+        while (true) {
+            try {
+                homeViewModel.refreshContainersStats()
+            } catch (e: Exception) {
+                Log.e("HomeScreen", "Erreur refresh stats", e)
+            }
+            delay(2000) // Rafraîchissement toutes les 2 secondes
+        }
+    }
+
     Scaffold(
         topBar = {
             Column {
                 CenterAlignedTopAppBar(
-                    title = { Text("Docker App") },
+                    title = { Text("Docker App", color = DockerBlue) },
                     actions = {
                         IconButton(onClick = onLogout) {
                             Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Déconnexion")
                         }
-                    }
+                    },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = DockerDarkBlue,
+                        titleContentColor = DockerBlue,
+                        actionIconContentColor = LightOnPrimary
+                    )
                 )
-                
+
                 // Barre de recherche
                 TextField(
                     value = searchQuery,
@@ -60,9 +84,16 @@ fun HomeScreen(
                         .padding(horizontal = 16.dp),
                     placeholder = { Text("Rechercher un conteneur...") },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                    singleLine = true
+                    singleLine = true,
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = LightSurface,
+                        unfocusedContainerColor = LightSurface,
+                        focusedIndicatorColor = DockerBlue,
+                        unfocusedIndicatorColor = DockerBlue,
+                        cursorColor = DockerBlue
+                    )
                 )
-                
+
                 // Filtres d'état
                 ScrollableTabRow(
                     selectedTabIndex = when(selectedStateFilter) {
@@ -70,7 +101,21 @@ fun HomeScreen(
                         "exited" -> 2
                         else -> 0
                     },
-                    modifier = Modifier.padding(horizontal = 16.dp)
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    containerColor = LightSurface,
+                    contentColor = DockerBlue,
+                    indicator = { tabPositions ->
+                        TabRowDefaults.Indicator(
+                            Modifier.tabIndicatorOffset(tabPositions[
+                                when(selectedStateFilter) {
+                                    "running" -> 1
+                                    "exited" -> 2
+                                    else -> 0
+                                }
+                            ]),
+                            color = DockerBlue
+                        )
+                    }
                 ) {
                     Tab(
                         selected = selectedStateFilter == null,
@@ -92,7 +137,8 @@ fun HomeScreen(
                     }
                 }
             }
-        }
+        },
+        containerColor = LightBackground
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -170,48 +216,110 @@ fun ContainerCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
+            .padding(vertical = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 4.dp
+        )
     ) {
         Column(
             modifier = Modifier
                 .padding(16.dp)
                 .fillMaxWidth()
         ) {
-            // Utilisation plus sûre de l'ID et du nom
             val displayName = container.names?.firstOrNull()?.removePrefix("/") 
                 ?: if (container.id.isNotEmpty()) container.id.take(12) else "Unknown"
             
             Text(
                 text = displayName,
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
             )
             
             Spacer(modifier = Modifier.height(4.dp))
+            
+            // Image et description
             Text(
                 text = "Image: ${container.image}",
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.Black
             )
-            Spacer(modifier = Modifier.height(4.dp))
+            container.description?.let { desc ->
+                Text(
+                    text = "Description: $desc",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Black
+                )
+            }
+            
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
+            
+            // État et status
             Row {
                 Text(
                     text = "État: ",
-                    style = MaterialTheme.typography.bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Black
                 )
                 Text(
                     text = container.state,
                     color = when (container.state.lowercase()) {
-                        "running" -> MaterialTheme.colorScheme.primary
-                        "exited" -> MaterialTheme.colorScheme.error
+                        "running" -> StatusRunning
+                        "exited" -> StatusStopped
+                        "paused" -> StatusPaused
                         else -> MaterialTheme.colorScheme.onSurface
                     }
                 )
             }
             Text(
                 text = container.status,
-                style = MaterialTheme.typography.bodySmall
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Black
             )
+            
+            // Informations système pour les conteneurs en cours d'exécution
+            if (container.state.lowercase() == "running") {
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "CPU: ${String.format("%.1f", container.cpuUsage)}%",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Black
+                    )
+                    Text(
+                        text = "RAM: ${formatSize(container.memoryUsage)}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Black
+                    )
+                }
+            }
+            
+            // Ports
+            container.ports?.takeIf { it.isNotEmpty() }?.let { ports ->
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Ports:",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Black
+                )
+                ports.forEach { port ->
+                    Text(
+                        text = "${port.publicPort}:${port.privatePort} (${port.type})",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Black
+                    )
+                }
+            }
+            
             Spacer(modifier = Modifier.height(8.dp))
+            
+            // Boutons d'action
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -221,7 +329,8 @@ fun ContainerCard(
                         Button(
                             onClick = { homeViewModel.stopContainer(container.id) },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.error
+                                containerColor = StatusStopped,
+                                contentColor = LightOnError
                             )
                         ) {
                             Text("Arrêter")
@@ -231,7 +340,8 @@ fun ContainerCard(
                         Button(
                             onClick = { homeViewModel.startContainer(container.id) },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary
+                                containerColor = StatusRunning,
+                                contentColor = LightOnPrimary
                             )
                         ) {
                             Text("Démarrer")
@@ -239,7 +349,11 @@ fun ContainerCard(
                     }
                 }
                 Button(
-                    onClick = { homeViewModel.restartContainer(container.id) }
+                    onClick = { homeViewModel.restartContainer(container.id) },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = DockerBlue,
+                        contentColor = LightOnPrimary
+                    )
                 ) {
                     Text("Redémarrer")
                 }
@@ -247,3 +361,31 @@ fun ContainerCard(
         }
     }
 }
+
+private fun formatSize(bytes: Long): String {
+    val kb = bytes / 1024.0
+    val mb = kb / 1024.0
+    val gb = mb / 1024.0
+    
+    return when {
+        gb >= 1.0 -> String.format("%.1f GB", gb)
+        mb >= 1.0 -> String.format("%.1f MB", mb)
+        kb >= 1.0 -> String.format("%.1f KB", kb)
+        else -> String.format("%d B", bytes)
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ContainerCardPreview() {
+    ContainerCard(
+        container = Container(
+            id = "abc123",
+            names = listOf("/test-container"),
+            image = "nginx:latest",
+            state = "running",
+            status = "Up 2 hours"
+        )
+    )
+}
+

@@ -1,10 +1,12 @@
 package com.example.dockerapp.data.api
 
 import com.example.dockerapp.data.model.Container
+import com.example.dockerapp.data.model.ContainerStats
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface ApiService {
     @GET("info")
@@ -21,4 +23,10 @@ interface ApiService {
     
     @POST("containers/{id}/restart")
     suspend fun restartContainer(@Path("id") containerId: String): Response<Unit>
+    
+    @GET("containers/{id}/stats")
+    suspend fun getContainerStats(
+        @Path("id") containerId: String,
+        @Query("stream") stream: Boolean
+    ): Response<ContainerStats>
 }
