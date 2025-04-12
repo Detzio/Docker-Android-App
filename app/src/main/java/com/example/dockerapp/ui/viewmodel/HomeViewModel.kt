@@ -1,5 +1,6 @@
 package com.example.dockerapp.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.dockerapp.data.api.RetrofitClient
@@ -26,11 +27,16 @@ class HomeViewModel : ViewModel() {
             try {
                 val response = RetrofitClient.apiService.getContainers()
                 if (response.isSuccessful) {
-                    _containers.value = response.body() ?: emptyList()
+                    val containers = response.body()
+                    Log.d("HomeViewModel", "Containers received: ${containers?.size}")
+                    Log.d("HomeViewModel", "Raw response: ${containers}")
+                    _containers.value = containers ?: emptyList()
                 } else {
-                    _error.value = "Erreur lors du chargement des conteneurs"
+                    Log.e("HomeViewModel", "Error response: ${response.errorBody()?.string()}")
+                    _error.value = "Erreur lors du chargement des conteneurs: ${response.code()}"
                 }
             } catch (e: Exception) {
+                Log.e("HomeViewModel", "Network error", e)
                 _error.value = "Erreur réseau: ${e.message}"
             } finally {
                 _isLoading.value = false

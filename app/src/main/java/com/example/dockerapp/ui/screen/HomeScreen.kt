@@ -1,5 +1,6 @@
 package com.example.dockerapp.ui.screen
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -31,6 +32,7 @@ fun HomeScreen(
     val error by homeViewModel.error.collectAsState()
 
     LaunchedEffect(Unit) {
+        Log.d("HomeScreen", "Loading containers...")
         homeViewModel.loadContainers()
     }
 
@@ -58,21 +60,44 @@ fun HomeScreen(
                     )
                 }
                 error != null -> {
-                    Text(
-                        text = error ?: "",
-                        color = MaterialTheme.colorScheme.error,
+                    Column(
                         modifier = Modifier
                             .align(Alignment.Center)
-                            .padding(16.dp)
-                    )
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Erreur",
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = error ?: "",
+                            color = MaterialTheme.colorScheme.error
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(onClick = { homeViewModel.loadContainers() }) {
+                            Text("Réessayer")
+                        }
+                    }
                 }
                 containers.isEmpty() -> {
-                    Text(
-                        text = "Aucun conteneur trouvé",
+                    Column(
                         modifier = Modifier
                             .align(Alignment.Center)
-                            .padding(16.dp)
-                    )
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Aucun conteneur trouvé",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(onClick = { homeViewModel.loadContainers() }) {
+                            Text("Actualiser")
+                        }
+                    }
                 }
                 else -> {
                     LazyColumn(
