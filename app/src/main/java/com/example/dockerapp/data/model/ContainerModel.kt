@@ -12,5 +12,16 @@ data class Container(
     @SerializedName("State")
     val state: String = "",
     @SerializedName("Status")
-    val status: String = ""
+    val status: String = "",
+    @SerializedName("Ports")
+    val ports: List<Port>? = null
+)
+
+data class Port(
+    @SerializedName("PrivatePort")
+    val privatePort: Int,
+    @SerializedName("PublicPort")
+    val publicPort: Int,
+    @SerializedName("Type")
+    val type: String
 )

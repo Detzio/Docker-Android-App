@@ -7,6 +7,7 @@ import com.example.dockerapp.data.api.RetrofitClient
 import com.example.dockerapp.data.model.Container
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 class HomeViewModel : ViewModel() {
@@ -18,6 +19,46 @@ class HomeViewModel : ViewModel() {
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
+
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery
+    
+    private val _selectedStateFilter = MutableStateFlow<String?>(null)
+    val selectedStateFilter: StateFlow<String?> = _selectedStateFilter
+    
+    private val _filteredContainers = MutableStateFlow<List<Container>>(emptyList())
+    val filteredContainers: StateFlow<List<Container>> = _filteredContainers
+    
+    init {
+        viewModelScope.launch {
+            // Combine les flux pour filtrer les conteneurs
+            combine(
+                _containers,
+                _searchQuery,
+                _selectedStateFilter
+            ) { containers, query, stateFilter ->
+                containers.filter { container ->
+                    val matchesQuery = container.names?.any { 
+                        it.contains(query, ignoreCase = true) 
+                    } ?: container.id.contains(query, ignoreCase = true)
+                    
+                    val matchesState = stateFilter == null || container.state == stateFilter
+                    
+                    matchesQuery && matchesState
+                }
+            }.collect {
+                _filteredContainers.value = it
+            }
+        }
+    }
+    
+    fun updateSearchQuery(query: String) {
+        _searchQuery.value = query
+    }
+    
+    fun updateStateFilter(state: String?) {
+        _selectedStateFilter.value = state
+    }
 
     fun loadContainers() {
         viewModelScope.launch {
@@ -40,6 +81,51 @@ class HomeViewModel : ViewModel() {
                 _error.value = "Erreur réseau: ${e.message}"
             } finally {
                 _isLoading.value = false
+            }
+        }
+    }
+
+    fun startContainer(containerId: String) {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.apiService.startContainer(containerId)
+                if (response.isSuccessful) {
+                    loadContainers() // Recharger la liste après l'action
+                } else {
+                    _error.value = "Impossible de démarrer le conteneur"
+                }
+            } catch (e: Exception) {
+                _error.value = "Erreur: ${e.message}"
+            }
+        }
+    }
+
+    fun stopContainer(containerId: String) {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.apiService.stopContainer(containerId)
+                if (response.isSuccessful) {
+                    loadContainers()
+                } else {
+                    _error.value = "Impossible d'arrêter le conteneur"
+                }
+            } catch (e: Exception) {
+                _error.value = "Erreur: ${e.message}"
+            }
+        }
+    }
+
+    fun restartContainer(containerId: String) {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.apiService.restartContainer(containerId)
+                if (response.isSuccessful) {
+                    loadContainers()
+                } else {
+                    _error.value = "Impossible de redémarrer le conteneur"
+                }
+            } catch (e: Exception) {
+                _error.value = "Erreur: ${e.message}"
             }
         }
     }
