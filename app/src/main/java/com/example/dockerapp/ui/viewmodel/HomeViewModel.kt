@@ -9,11 +9,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
-import retrofit2.http.Query
 
 class HomeViewModel : ViewModel() {
     private val _containers = MutableStateFlow<List<Container>>(emptyList())
-    val containers: StateFlow<List<Container>> = _containers
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
@@ -71,7 +69,7 @@ class HomeViewModel : ViewModel() {
                 if (response.isSuccessful) {
                     val containers = response.body()
                     Log.d("HomeViewModel", "Containers received: ${containers?.size}")
-                    Log.d("HomeViewModel", "Raw response: ${containers}")
+                    Log.d("HomeViewModel", "Raw response: $containers")
                     _containers.value = containers ?: emptyList()
                 } else {
                     Log.e("HomeViewModel", "Error response: ${response.errorBody()?.string()}")
@@ -176,5 +174,17 @@ class HomeViewModel : ViewModel() {
                     }
                 }
         }
+    }
+
+    private val _navigationEvent = MutableStateFlow<Pair<String, String>?>(null)
+    val navigationEvent: StateFlow<Pair<String, String>?> = _navigationEvent
+    
+    fun navigateToLogs(containerId: String, containerName: String?) {
+        val displayName = containerName ?: containerId.take(12)
+        _navigationEvent.value = Pair(containerId, displayName)
+    }
+    
+    fun onNavigationHandled() {
+        _navigationEvent.value = null
     }
 }

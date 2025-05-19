@@ -35,11 +35,7 @@ class AuthRepository(private val userCredentialsDao: UserCredentialsDao) {
     fun getActiveCredentials(): Flow<UserCredentials?> {
         return userCredentialsDao.getActiveCredentials()
     }
-    
-    suspend fun hasActiveCredentials(): Boolean {
-        return userCredentialsDao.hasActiveCredentials() > 0
-    }
-    
+
     suspend fun logout() {
         // Réinitialise les identifiants dans RetrofitClient
         RetrofitClient.clearCredentials()

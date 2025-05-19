@@ -1,5 +1,6 @@
 package com.example.dockerapp.data.model
 
+import android.annotation.SuppressLint
 import com.google.gson.annotations.SerializedName
 
 data class ContainerStats(
@@ -10,6 +11,7 @@ data class ContainerStats(
     @SerializedName("memory_stats")
     val memoryStats: MemoryStats
 ) {
+    @SuppressLint("DefaultLocale")
     fun calculateCpuPercentage(): Float {
         try {
             val cpuDelta = cpuStats.cpuUsage.totalUsage - preCpuStats.cpuUsage.totalUsage
@@ -36,17 +38,6 @@ data class ContainerStats(
         }
     }
 
-    fun calculateMemoryUsagePercentage(): Float {
-        return try {
-            if (memoryStats.limit > 0) {
-                (memoryStats.usage.toFloat() / memoryStats.limit.toFloat()) * 100
-            } else {
-                0.0f
-            }
-        } catch (e: Exception) {
-            0.0f
-        }
-    }
 }
 
 data class CpuStats(

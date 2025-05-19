@@ -1,14 +1,42 @@
 package com.example.dockerapp.ui.screen
 
+import android.annotation.SuppressLint
 import android.util.Log
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ScrollableTabRow
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRowDefaults.SecondaryIndicator
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -21,10 +49,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.dockerapp.data.model.Container
+import com.example.dockerapp.ui.theme.DockerBlue
+import com.example.dockerapp.ui.theme.DockerDarkBlue
+import com.example.dockerapp.ui.theme.LightBackground
+import com.example.dockerapp.ui.theme.LightOnError
+import com.example.dockerapp.ui.theme.LightOnPrimary
+import com.example.dockerapp.ui.theme.LightSurface
+import com.example.dockerapp.ui.theme.StatusPaused
+import com.example.dockerapp.ui.theme.StatusRunning
+import com.example.dockerapp.ui.theme.StatusStopped
 import com.example.dockerapp.ui.viewmodel.HomeViewModel
-import com.example.dockerapp.ui.viewmodel.LoginViewModel
-import com.example.dockerapp.ui.theme.*
-import androidx.compose.material3.TextFieldDefaults
 import kotlinx.coroutines.delay
 
 
@@ -32,7 +66,6 @@ import kotlinx.coroutines.delay
 @Composable
 fun HomeScreen(
     onLogout: () -> Unit,
-    viewModel: LoginViewModel = viewModel(),
     homeViewModel: HomeViewModel = viewModel()
 ) {
     val containers by homeViewModel.filteredContainers.collectAsState()
@@ -105,7 +138,7 @@ fun HomeScreen(
                     containerColor = LightSurface,
                     contentColor = DockerBlue,
                     indicator = { tabPositions ->
-                        TabRowDefaults.Indicator(
+                        SecondaryIndicator(
                             Modifier.tabIndicatorOffset(tabPositions[
                                 when(selectedStateFilter) {
                                     "running" -> 1
@@ -207,7 +240,7 @@ fun HomeScreen(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@SuppressLint("DefaultLocale")
 @Composable
 fun ContainerCard(
     container: Container,
@@ -254,8 +287,8 @@ fun ContainerCard(
                     color = Color.Black
                 )
             }
-            
-            Divider(modifier = Modifier.padding(vertical = 8.dp))
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
             
             // État et status
             Row {
@@ -318,7 +351,6 @@ fun ContainerCard(
             }
             
             Spacer(modifier = Modifier.height(8.dp))
-            
             // Boutons d'action
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -331,9 +363,22 @@ fun ContainerCard(
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = StatusStopped,
                                 contentColor = LightOnError
-                            )
+                            ),
+                            modifier = Modifier.weight(1f)
                         ) {
                             Text("Arrêter")
+                        }
+                        
+                        // Afficher Redémarrer seulement si le conteneur est en cours d'exécution
+                        Button(
+                            onClick = { homeViewModel.restartContainer(container.id) },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = DockerBlue,
+                                contentColor = LightOnPrimary
+                            ),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Redémarrer")
                         }
                     }
                     "exited" -> {
@@ -342,26 +387,32 @@ fun ContainerCard(
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = StatusRunning,
                                 contentColor = LightOnPrimary
-                            )
+                            ),
+                            modifier = Modifier.weight(1f)
                         ) {
                             Text("Démarrer")
                         }
                     }
                 }
-                Button(
-                    onClick = { homeViewModel.restartContainer(container.id) },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = DockerBlue,
-                        contentColor = LightOnPrimary
-                    )
+                  // Bouton pour afficher les logs 
+                IconButton(
+                    onClick = { 
+                        val displayName = container.names?.firstOrNull()?.removePrefix("/") 
+                        homeViewModel.navigateToLogs(container.id, displayName)
+                    }
                 ) {
-                    Text("Redémarrer")
+                    Icon(
+                        Icons.Default.Search,
+                        contentDescription = "Voir les logs",
+                        tint = DockerBlue
+                    )
                 }
             }
         }
     }
 }
 
+@SuppressLint("DefaultLocale")
 private fun formatSize(bytes: Long): String {
     val kb = bytes / 1024.0
     val mb = kb / 1024.0
