@@ -20,6 +20,10 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     private val _isAuthenticated = MutableStateFlow(false)
     val isAuthenticated: StateFlow<Boolean> = _isAuthenticated
     
+    // Ajout d'un état pour suivre la vérification des identifiants
+    private val _isInitialCheckInProgress = MutableStateFlow(true)
+    val isInitialCheckInProgress: StateFlow<Boolean> = _isInitialCheckInProgress
+    
     // Flag pour éviter de vérifier les identifiants après une déconnexion
     private var checkingEnabled = true
     private var credentialCheckJob: Job? = null
@@ -29,12 +33,18 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         repository = AuthRepository(database.userCredentialsDao())
         checkSavedCredentials()
     }
-    
-    private fun checkSavedCredentials() {
+      private fun checkSavedCredentials() {
         // Annuler tout job existant avant d'en créer un nouveau
         credentialCheckJob?.cancel()
         
-        if (!checkingEnabled) return
+        // Démarrer la vérification
+        _isInitialCheckInProgress.value = true
+        
+        if (!checkingEnabled) {
+            // Si la vérification est désactivée, terminer immédiatement
+            _isInitialCheckInProgress.value = false
+            return
+        }
         
         credentialCheckJob = viewModelScope.launch {
             repository.getActiveCredentials().collect { credentials ->
@@ -52,6 +62,8 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                         _isAuthenticated.value = false
                     }
                 }
+                // Indiquer que la vérification initiale est terminée
+                _isInitialCheckInProgress.value = false
             }
         }
     }
@@ -74,13 +86,13 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
-    
-    fun logout() {
+      fun logout() {
         // Annuler d'abord le job de vérification des identifiants
         credentialCheckJob?.cancel()
         
         // Désactiver le checking et effectuer la déconnexion
         checkingEnabled = false
+        _isInitialCheckInProgress.value = false
         
         viewModelScope.launch {
             try {
