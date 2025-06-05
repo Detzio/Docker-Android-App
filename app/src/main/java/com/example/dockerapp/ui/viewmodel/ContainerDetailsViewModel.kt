@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.dockerapp.data.api.RetrofitClient
 import com.example.dockerapp.data.model.ContainerDetails
 import com.example.dockerapp.data.model.ContainerStats
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -25,6 +26,8 @@ class ContainerDetailsViewModel : ViewModel() {
 
     private val _actionInProgress = MutableStateFlow(false)
     val actionInProgress: StateFlow<Boolean> = _actionInProgress
+    
+    private var statsJob: Job? = null
 
     fun loadContainerDetails(containerId: String) {
         viewModelScope.launch {
@@ -51,10 +54,11 @@ class ContainerDetailsViewModel : ViewModel() {
                 _isLoading.value = false
             }
         }
-    }
-
+    }    
+    
     private fun loadContainerStats(containerId: String) {
-        viewModelScope.launch {
+        statsJob?.cancel()
+        statsJob = viewModelScope.launch {
             try {
                 val response = RetrofitClient.apiService.getContainerStats(containerId, stream = false)
                 if (response.isSuccessful) {
@@ -72,6 +76,16 @@ class ContainerDetailsViewModel : ViewModel() {
                 loadContainerStats(containerId)
             }
         }
+    }
+    
+    fun stopStatsRefresh() {
+        statsJob?.cancel()
+        statsJob = null
+    }
+    
+    override fun onCleared() {
+        super.onCleared()
+        statsJob?.cancel()
     }
 
     fun startContainer(containerId: String) {

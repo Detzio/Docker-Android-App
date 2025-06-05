@@ -20,6 +20,7 @@ import com.example.dockerapp.data.model.ContainerStats
 import com.example.dockerapp.ui.theme.*
 import com.example.dockerapp.ui.viewmodel.ContainerDetailsViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -42,13 +43,22 @@ fun ContainerDetailsScreen(
         viewModel.loadContainerDetails(containerId)
     }
 
-    // Actualiser les stats toutes les 3 secondes si le conteneur est en cours d'exécution
+    // Actualiser les stats toutes les 5 secondes si le conteneur est en cours d'exécution
     LaunchedEffect(containerDetails?.state?.running) {
         if (containerDetails?.state?.running == true) {
-            while (true) {
-                delay(3000)
-                viewModel.refreshStats(containerId)
+            while (isActive) {
+                delay(5000)
+                if (isActive) {
+                    viewModel.refreshStats(containerId)
+                }
             }
+        }
+    }
+    
+    // Arrêter l'actualisation des stats quand on quitte l'écran
+    DisposableEffect(Unit) {
+        onDispose {
+            viewModel.stopStatsRefresh()
         }
     }
 

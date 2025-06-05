@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.dockerapp.data.api.RetrofitClient
 import com.example.dockerapp.data.model.Container
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -27,6 +28,9 @@ class HomeViewModel : ViewModel() {
     
     private val _filteredContainers = MutableStateFlow<List<Container>>(emptyList())
     val filteredContainers: StateFlow<List<Container>> = _filteredContainers
+    
+    private var loadContainersJob: Job? = null
+    private var containerActionJob: Job? = null
     
     init {
         viewModelScope.launch {
@@ -197,5 +201,11 @@ class HomeViewModel : ViewModel() {
     
     fun onDetailsNavigationHandled() {
         _detailsNavigationEvent.value = null
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        loadContainersJob?.cancel()
+        containerActionJob?.cancel()
     }
 }
