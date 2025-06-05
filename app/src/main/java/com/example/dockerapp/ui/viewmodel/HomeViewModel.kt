@@ -174,17 +174,28 @@ class HomeViewModel : ViewModel() {
                     }
                 }
         }
-    }
-
+    }    
     private val _navigationEvent = MutableStateFlow<Pair<String, String>?>(null)
     val navigationEvent: StateFlow<Pair<String, String>?> = _navigationEvent
+    
+    private val _detailsNavigationEvent = MutableStateFlow<Pair<String, String>?>(null)
+    val detailsNavigationEvent: StateFlow<Pair<String, String>?> = _detailsNavigationEvent
     
     fun navigateToLogs(containerId: String, containerName: String?) {
         val displayName = containerName ?: containerId.take(12)
         _navigationEvent.value = Pair(containerId, displayName)
     }
     
+    fun navigateToDetails(containerId: String, containerName: String?) {
+        val displayName = containerName ?: containerId.take(12)
+        _detailsNavigationEvent.value = Pair(containerId, displayName)
+    }
+    
     fun onNavigationHandled() {
         _navigationEvent.value = null
+    }
+    
+    fun onDetailsNavigationHandled() {
+        _detailsNavigationEvent.value = null
     }
 }

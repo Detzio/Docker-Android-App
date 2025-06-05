@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -393,8 +394,8 @@ fun ContainerCard(
                             Text("Démarrer")
                         }
                     }
-                }
-                  // Bouton pour afficher les logs 
+                }                
+                // Bouton pour afficher les logs 
                 IconButton(
                     onClick = { 
                         val displayName = container.names?.firstOrNull()?.removePrefix("/") 
@@ -404,6 +405,20 @@ fun ContainerCard(
                     Icon(
                         Icons.Default.Search,
                         contentDescription = "Voir les logs",
+                        tint = DockerBlue
+                    )
+                }
+                
+                // Bouton pour afficher les détails
+                IconButton(
+                    onClick = { 
+                        val displayName = container.names?.firstOrNull()?.removePrefix("/") 
+                        homeViewModel.navigateToDetails(container.id, displayName)
+                    }
+                ) {
+                    Icon(
+                        Icons.Default.Info,
+                        contentDescription = "Voir les détails",
                         tint = DockerBlue
                     )
                 }
