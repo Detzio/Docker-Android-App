@@ -2,6 +2,7 @@ package com.example.dockerapp.data.api
 
 import com.example.dockerapp.data.model.Container
 import com.example.dockerapp.data.model.ContainerStats
+import com.example.dockerapp.data.model.ContainerDetails
 import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.GET
@@ -30,8 +31,7 @@ interface ApiService {
         @Path("id") containerId: String,
         @Query("stream") stream: Boolean
     ): Response<ContainerStats>
-    
-    @GET("containers/{id}/logs")
+      @GET("containers/{id}/logs")
     suspend fun getContainerLogs(
         @Path("id") containerId: String,
         @Query("stdout") stdout: Boolean = true,
@@ -39,4 +39,9 @@ interface ApiService {
         @Query("follow") follow: Boolean = false,
         @Query("tail") tail: String = "100"
     ): Response<ResponseBody>
+    
+    @GET("containers/{id}/json")
+    suspend fun getContainerDetails(
+        @Path("id") containerId: String
+    ): Response<ContainerDetails>
 }

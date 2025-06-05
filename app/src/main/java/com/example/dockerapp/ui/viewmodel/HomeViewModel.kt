@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.dockerapp.data.api.RetrofitClient
 import com.example.dockerapp.data.model.Container
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -27,6 +28,9 @@ class HomeViewModel : ViewModel() {
     
     private val _filteredContainers = MutableStateFlow<List<Container>>(emptyList())
     val filteredContainers: StateFlow<List<Container>> = _filteredContainers
+    
+    private var loadContainersJob: Job? = null
+    private var containerActionJob: Job? = null
     
     init {
         viewModelScope.launch {
@@ -127,7 +131,7 @@ class HomeViewModel : ViewModel() {
                 _error.value = "Erreur: ${e.message}"
             }
         }
-    }
+    }   
 
     fun loadContainerStats(containerId: String) {
         viewModelScope.launch {
@@ -175,16 +179,33 @@ class HomeViewModel : ViewModel() {
                 }
         }
     }
-
     private val _navigationEvent = MutableStateFlow<Pair<String, String>?>(null)
     val navigationEvent: StateFlow<Pair<String, String>?> = _navigationEvent
+    
+    private val _detailsNavigationEvent = MutableStateFlow<Pair<String, String>?>(null)
+    val detailsNavigationEvent: StateFlow<Pair<String, String>?> = _detailsNavigationEvent
     
     fun navigateToLogs(containerId: String, containerName: String?) {
         val displayName = containerName ?: containerId.take(12)
         _navigationEvent.value = Pair(containerId, displayName)
     }
     
+    fun navigateToDetails(containerId: String, containerName: String?) {
+        val displayName = containerName ?: containerId.take(12)
+        _detailsNavigationEvent.value = Pair(containerId, displayName)
+    }
+    
     fun onNavigationHandled() {
         _navigationEvent.value = null
+    }
+    
+    fun onDetailsNavigationHandled() {
+        _detailsNavigationEvent.value = null
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        loadContainersJob?.cancel()
+        containerActionJob?.cancel()
     }
 }

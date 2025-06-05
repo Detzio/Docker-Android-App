@@ -14,6 +14,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.dockerapp.ui.screen.ContainerDetailsScreen
 import com.example.dockerapp.ui.screen.HomeScreen
 import com.example.dockerapp.ui.screen.LogsScreen
 import com.example.dockerapp.ui.screen.LoginScreen
@@ -59,17 +60,24 @@ fun AppNavigation(
                 }
             )
         }
-        
-        composable(AppScreen.Home.route) {
+          composable(AppScreen.Home.route) {
             val homeViewModel = viewModel<HomeViewModel>()
             val navigationEvent by homeViewModel.navigationEvent.collectAsState()
-
+            val detailsNavigationEvent by homeViewModel.detailsNavigationEvent.collectAsState()
 
             // Observer pour détecter la navigation vers les logs
             LaunchedEffect(navigationEvent) {
                 navigationEvent?.let { (containerId, containerName) ->
                     navController.navigate(AppScreen.Logs.createRoute(containerId, containerName))
                     homeViewModel.onNavigationHandled()
+                }
+            }
+            
+            // Observer pour détecter la navigation vers les détails
+            LaunchedEffect(detailsNavigationEvent) {
+                detailsNavigationEvent?.let { (containerId, containerName) ->
+                    navController.navigate(AppScreen.ContainerDetails.createRoute(containerId, containerName))
+                    homeViewModel.onDetailsNavigationHandled()
                 }
             }
             
@@ -93,6 +101,22 @@ fun AppNavigation(
                 onBack = { navController.popBackStack() }
             )
         }
+        
+        composable(
+            AppScreen.ContainerDetails.route,
+            arguments = listOf(
+                navArgument("containerId") { type = NavType.StringType },
+                navArgument("containerName") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val containerId = backStackEntry.arguments?.getString("containerId") ?: ""
+            val containerName = backStackEntry.arguments?.getString("containerName") ?: ""
+            ContainerDetailsScreen(
+                containerId = containerId,
+                containerName = containerName,
+                onBack = { navController.popBackStack() }
+            )
+        }
     }
 }
 
@@ -101,5 +125,8 @@ sealed class AppScreen(val route: String) {
     object Home : AppScreen("home")
     object Logs : AppScreen("logs/{containerId}/{containerName}") {
         fun createRoute(containerId: String, containerName: String): String = "logs/$containerId/${containerName}"
+    }
+    object ContainerDetails : AppScreen("container-details/{containerId}/{containerName}") {
+        fun createRoute(containerId: String, containerName: String): String = "container-details/$containerId/${containerName}"
     }
 }

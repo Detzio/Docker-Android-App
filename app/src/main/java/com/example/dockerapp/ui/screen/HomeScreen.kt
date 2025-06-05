@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -392,20 +393,41 @@ fun ContainerCard(
                         ) {
                             Text("Démarrer")
                         }
+                        Spacer(modifier = Modifier.weight(1f))
                     }
                 }
-                  // Bouton pour afficher les logs 
-                IconButton(
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(
                     onClick = { 
                         val displayName = container.names?.firstOrNull()?.removePrefix("/") 
                         homeViewModel.navigateToLogs(container.id, displayName)
-                    }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = DockerDarkBlue,
+                        contentColor = LightOnPrimary
+                    ),
+                    modifier = Modifier.weight(1f)
                 ) {
-                    Icon(
-                        Icons.Default.Search,
-                        contentDescription = "Voir les logs",
-                        tint = DockerBlue
-                    )
+                    Text("Logs")
+                }
+                
+                Button(
+                    onClick = { 
+                        val displayName = container.names?.firstOrNull()?.removePrefix("/") 
+                        homeViewModel.navigateToDetails(container.id, displayName)
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = DockerBlue.copy(alpha = 0.8f),
+                        contentColor = LightOnPrimary
+                    ),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Détails")
                 }
             }
         }
