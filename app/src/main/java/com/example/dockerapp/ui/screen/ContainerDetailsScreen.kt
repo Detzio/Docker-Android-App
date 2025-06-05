@@ -41,14 +41,14 @@ fun ContainerDetailsScreen(
 
     LaunchedEffect(containerId) {
         viewModel.loadContainerDetails(containerId)
-    }
+    }    
 
-    // Actualiser les stats toutes les 5 secondes si le conteneur est en cours d'exécution
+    // Actualiser les stats toutes les 10 secondes si le conteneur est en cours d'exécution
     LaunchedEffect(containerDetails?.state?.running) {
         if (containerDetails?.state?.running == true) {
             while (isActive) {
-                delay(5000)
-                if (isActive) {
+                delay(10000)
+                if (isActive && containerDetails?.state?.running == true) {
                     viewModel.refreshStats(containerId)
                 }
             }

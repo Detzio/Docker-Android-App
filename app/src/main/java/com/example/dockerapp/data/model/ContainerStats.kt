@@ -63,3 +63,10 @@ data class MemoryStats(
     val limit: Long
 )
 
+// Version simplifiée pour réduire la consommation mémoire
+data class SimpleContainerStats(
+    val cpuPercentage: Float = 0f,
+    val memoryUsage: Long = 0L,
+    val memoryLimit: Long = 0L
+)
+

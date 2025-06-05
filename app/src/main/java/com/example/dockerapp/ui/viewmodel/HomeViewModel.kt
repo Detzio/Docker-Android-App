@@ -131,7 +131,7 @@ class HomeViewModel : ViewModel() {
                 _error.value = "Erreur: ${e.message}"
             }
         }
-    }
+    }   
 
     fun loadContainerStats(containerId: String) {
         viewModelScope.launch {
@@ -178,7 +178,7 @@ class HomeViewModel : ViewModel() {
                     }
                 }
         }
-    }    
+    }
     private val _navigationEvent = MutableStateFlow<Pair<String, String>?>(null)
     val navigationEvent: StateFlow<Pair<String, String>?> = _navigationEvent
     

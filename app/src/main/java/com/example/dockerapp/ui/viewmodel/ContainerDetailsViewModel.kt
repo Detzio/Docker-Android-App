@@ -10,6 +10,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
 
 class ContainerDetailsViewModel : ViewModel() {
     private val _containerDetails = MutableStateFlow<ContainerDetails?>(null)
@@ -28,6 +30,9 @@ class ContainerDetailsViewModel : ViewModel() {
     val actionInProgress: StateFlow<Boolean> = _actionInProgress
     
     private var statsJob: Job? = null
+    private val isLoadingStats = AtomicBoolean(false)
+    private val lastStatsUpdate = AtomicLong(0)
+    private val MIN_STATS_INTERVAL = 8000L // Minimum 8 secondes entre les requêtes
 
     fun loadContainerDetails(containerId: String) {
         viewModelScope.launch {
@@ -54,18 +59,29 @@ class ContainerDetailsViewModel : ViewModel() {
                 _isLoading.value = false
             }
         }
-    }    
+    }        
     
     private fun loadContainerStats(containerId: String) {
+        val currentTime = System.currentTimeMillis()
+        val lastUpdate = lastStatsUpdate.get()
+        
+        // Vérifier l'intervalle minimum et éviter les appels simultanés
+        if (currentTime - lastUpdate < MIN_STATS_INTERVAL || !isLoadingStats.compareAndSet(false, true)) {
+            return
+        }
+        
         statsJob?.cancel()
         statsJob = viewModelScope.launch {
             try {
                 val response = RetrofitClient.apiService.getContainerStats(containerId, stream = false)
                 if (response.isSuccessful) {
                     _containerStats.value = response.body()
+                    lastStatsUpdate.set(currentTime)
                 }
             } catch (e: Exception) {
                 Log.e("ContainerDetailsVM", "Error loading stats", e)
+            } finally {
+                isLoadingStats.set(false)
             }
         }
     }
