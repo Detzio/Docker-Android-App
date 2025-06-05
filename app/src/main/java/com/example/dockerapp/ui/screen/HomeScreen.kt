@@ -393,34 +393,41 @@ fun ContainerCard(
                         ) {
                             Text("Démarrer")
                         }
+                        Spacer(modifier = Modifier.weight(1f))
                     }
-                }                
-                // Bouton pour afficher les logs 
-                IconButton(
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(
                     onClick = { 
                         val displayName = container.names?.firstOrNull()?.removePrefix("/") 
                         homeViewModel.navigateToLogs(container.id, displayName)
-                    }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = DockerDarkBlue,
+                        contentColor = LightOnPrimary
+                    ),
+                    modifier = Modifier.weight(1f)
                 ) {
-                    Icon(
-                        Icons.Default.Search,
-                        contentDescription = "Voir les logs",
-                        tint = DockerBlue
-                    )
+                    Text("Logs")
                 }
                 
-                // Bouton pour afficher les détails
-                IconButton(
+                Button(
                     onClick = { 
                         val displayName = container.names?.firstOrNull()?.removePrefix("/") 
                         homeViewModel.navigateToDetails(container.id, displayName)
-                    }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = DockerBlue.copy(alpha = 0.8f),
+                        contentColor = LightOnPrimary
+                    ),
+                    modifier = Modifier.weight(1f)
                 ) {
-                    Icon(
-                        Icons.Default.Info,
-                        contentDescription = "Voir les détails",
-                        tint = DockerBlue
-                    )
+                    Text("Détails")
                 }
             }
         }
