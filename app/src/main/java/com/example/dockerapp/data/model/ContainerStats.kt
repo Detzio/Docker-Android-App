@@ -1,7 +1,11 @@
 package com.example.dockerapp.data.model
 
 import android.annotation.SuppressLint
+import android.util.Log
 import com.google.gson.annotations.SerializedName
+import kotlin.math.round
+
+const val TAG = "ContainerStatModel"
 
 data class ContainerStats(
     @SerializedName("cpu_stats")
@@ -12,46 +16,48 @@ data class ContainerStats(
     val memoryStats: MemoryStats
 ) {
     @SuppressLint("DefaultLocale")
-    fun calculateCpuPercentage(): Float {
+    fun calculateCpuPercentage(): Double {
         try {
-            val cpuDelta = cpuStats.cpuUsage.totalUsage - preCpuStats.cpuUsage.totalUsage
-            val systemDelta = cpuStats.systemCpuUsage - preCpuStats.systemCpuUsage
+            val cpuDelta = (cpuStats.cpuUsage.totalUsage - preCpuStats.cpuUsage.totalUsage).toDouble()
+            val systemDelta = (cpuStats.systemCpuUsage - preCpuStats.systemCpuUsage).toDouble()
+            val onlineCpu = cpuStats.onlineCpu.toDouble()
+
+//            Log.d(TAG, "calculateCpuPercentage: cpuDelta: $cpuDelta")
+//            Log.d(TAG, "calculateCpuPercentage: systemDelta: $systemDelta")
+//            Log.d(TAG, "calculateCpuPercentage: onlineCpu: $onlineCpu")
 
             if (systemDelta <= 0 || cpuDelta < 0) {
-                return 0.0f
+                return 0.0
             }
 
-            // Conversion en Double pour une meilleure précision
-            val cpuDeltaD = cpuDelta.toDouble()
-            val systemDeltaD = systemDelta.toDouble()
-            val numCPUs = cpuStats.cpuUsage.percpuUsage.size.toDouble()
-
             // Nouveau calcul avec une meilleure précision
-            val cpuPercent = ((cpuDeltaD / systemDeltaD) * numCPUs * 100.0)
-                .coerceIn(0.0, 100.0)
-                .toFloat()
+            val cpuPercent = ((cpuDelta / systemDelta) * onlineCpu * 100.0).coerceIn(0.0, 100.0)
 
-            // Arrondir à 2 décimales pour éviter les valeurs trop petites
-            return String.format("%.2f", cpuPercent).toFloat()
+//            Log.d(TAG, "calculateCpuPercentage: result: $cpuPercent")
+
+            // Arrondir à 2 décimales
+            return (round(cpuPercent * 100) / 100.0)
         } catch (e: Exception) {
-            return 0.0f
+            Log.e(TAG, "calculateCpuPercentage: error: ${e.message}")
+            return 0.0
         }
     }
-
 }
 
 data class CpuStats(
     @SerializedName("cpu_usage")
     val cpuUsage: CpuUsage,
     @SerializedName("system_cpu_usage")
-    val systemCpuUsage: Long
+    val systemCpuUsage: Long,
+    @SerializedName("online_cpus")
+    val onlineCpu: Int
 )
 
 data class CpuUsage(
     @SerializedName("total_usage")
     val totalUsage: Long,
     @SerializedName("percpu_usage")
-    val percpuUsage: List<Long>
+    val perCpuUsage: List<Long>
 )
 
 data class MemoryStats(
@@ -64,9 +70,9 @@ data class MemoryStats(
 )
 
 // Version simplifiée pour réduire la consommation mémoire
-data class SimpleContainerStats(
-    val cpuPercentage: Float = 0f,
-    val memoryUsage: Long = 0L,
-    val memoryLimit: Long = 0L
-)
+//data class SimpleContainerStats(
+//    val cpuPercentage: Float = 0f,
+//    val memoryUsage: Long = 0L,
+//    val memoryLimit: Long = 0L
+//)
 

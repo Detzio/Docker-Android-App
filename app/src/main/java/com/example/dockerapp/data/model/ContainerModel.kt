@@ -20,7 +20,7 @@ data class Container(
     @SerializedName("SizeRootFs")
     val sizeRootFs: Long = 0,
     @SerializedName("CPUUsage")
-    val cpuUsage: Float = 0f,
+    val cpuUsage: Double = 0.0,
     @SerializedName("MemoryUsage")
     val memoryUsage: Long = 0,
     @SerializedName("Description")
