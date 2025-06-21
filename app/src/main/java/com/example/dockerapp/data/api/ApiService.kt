@@ -3,8 +3,12 @@ package com.example.dockerapp.data.api
 import com.example.dockerapp.data.model.Container
 import com.example.dockerapp.data.model.ContainerStats
 import com.example.dockerapp.data.model.ContainerDetails
+import com.example.dockerapp.data.model.ExecCreateRequest
+import com.example.dockerapp.data.model.ExecCreateResponse
+import com.example.dockerapp.data.model.ExecStartRequest
 import okhttp3.ResponseBody
 import retrofit2.Response
+import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
@@ -44,4 +48,23 @@ interface ApiService {
     suspend fun getContainerDetails(
         @Path("id") containerId: String
     ): Response<ContainerDetails>
+
+//    @POST("containers/{id}/exec")
+//    suspend fun createExecInstance(
+//        @Path("id") containerId: String,
+//        @Query("AttachStdin") attachStdin: Boolean = true,
+//        @Query("AttachStdout") attachStdout: Boolean = true
+//    ): Response<ExecInstanceRequest>
+
+    @POST("containers/{id}/exec")
+    suspend fun createExecInstance(
+        @Path("id") containerId: String,
+        @Body body: ExecCreateRequest
+    ): Response<ExecCreateResponse>
+
+    @POST("exec/{id}/start")
+    suspend fun startExec(
+        @Path("id") execId: String,
+        @Body body: ExecStartRequest
+    ): Response<ResponseBody>
 }
