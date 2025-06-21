@@ -322,7 +322,7 @@ fun ContainerCard(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "CPU: ${String.format("%.1f", container.cpuUsage)}%",
+                        text = "CPU: ${String.format("%.2f", container.cpuUsage)}%",
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color.Black
                     )

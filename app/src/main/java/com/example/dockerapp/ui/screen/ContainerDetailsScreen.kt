@@ -378,7 +378,7 @@ fun StatsCard(containerStats: ContainerStats) {
                         color = Color.Gray
                     )
                     Text(
-                        text = "${String.format("%.1f", containerStats.calculateCpuPercentage())}%",
+                        text = "${String.format("%.2f", containerStats.calculateCpuPercentage())}%",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = DockerBlue
