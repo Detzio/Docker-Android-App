@@ -194,6 +194,8 @@ class HomeViewModel : ViewModel() {
         val displayName = containerName ?: containerId.take(12)
         _detailsNavigationEvent.value = Pair(containerId, displayName)
     }
+
+
     
     fun onNavigationHandled() {
         _navigationEvent.value = null

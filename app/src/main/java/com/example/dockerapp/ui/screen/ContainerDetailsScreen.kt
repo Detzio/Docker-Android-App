@@ -31,7 +31,8 @@ fun ContainerDetailsScreen(
     containerId: String,
     containerName: String,
     onBack: () -> Unit,
-    viewModel: ContainerDetailsViewModel = viewModel()
+    viewModel: ContainerDetailsViewModel = viewModel(),
+    onNavigateToTerminal: (containerId: String, containerName: String?) -> Unit
 ) {
     val containerDetails by viewModel.containerDetails.collectAsState()
     val containerStats by viewModel.containerStats.collectAsState()
@@ -133,7 +134,8 @@ fun ContainerDetailsScreen(
                                 actionInProgress = actionInProgress,
                                 onStart = { viewModel.startContainer(containerId) },
                                 onStop = { viewModel.stopContainer(containerId) },
-                                onRestart = { viewModel.restartContainer(containerId) }
+                                onRestart = { viewModel.restartContainer(containerId) },
+                                onTerminal = { onNavigateToTerminal(containerId, containerName) }
                             )
                         }
 
@@ -198,6 +200,7 @@ fun ContainerActionsCard(
     containerDetails: ContainerDetails,
     actionInProgress: Boolean,
     onStart: () -> Unit,
+    onTerminal: () -> Unit,
     onStop: () -> Unit,
     onRestart: () -> Unit
 ) {
@@ -240,7 +243,7 @@ fun ContainerActionsCard(
                                 Text("Arrêter")
                             }
                         }
-                        
+
                         Button(
                             onClick = onRestart,
                             enabled = !actionInProgress,
@@ -281,6 +284,35 @@ fun ContainerActionsCard(
                         }
                     }
                 }
+            }
+
+            when (containerDetails.state?.status?.lowercase()) {
+                "running" -> {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Button(
+                            onClick = onTerminal,
+                            enabled = !actionInProgress,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = DockerBlue,
+                                contentColor = LightOnPrimary
+                            ),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            if (actionInProgress) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(16.dp),
+                                    color = LightOnPrimary
+                                )
+                            } else {
+                                Text("Terminal")
+                            }
+                        }
+                    }
+                }
+
             }
         }
     }

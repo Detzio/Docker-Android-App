@@ -18,6 +18,7 @@ import com.example.dockerapp.ui.screen.ContainerDetailsScreen
 import com.example.dockerapp.ui.screen.HomeScreen
 import com.example.dockerapp.ui.screen.LogsScreen
 import com.example.dockerapp.ui.screen.LoginScreen
+import com.example.dockerapp.ui.screen.TerminalScreen
 import com.example.dockerapp.ui.viewmodel.HomeViewModel
 import com.example.dockerapp.ui.viewmodel.LoginViewModel
 
@@ -114,6 +115,25 @@ fun AppNavigation(
             ContainerDetailsScreen(
                 containerId = containerId,
                 containerName = containerName,
+                onBack = { navController.popBackStack() },
+                onNavigateToTerminal = {id, name ->
+                    navController.navigate("terminal/$id/$name")
+                }
+            )
+        }
+
+        composable (
+          AppScreen.Terminal.route,
+            arguments = listOf(
+                navArgument("containerId") { type = NavType.StringType },
+                navArgument("containerName") { type = NavType.StringType }
+            )
+        ) { navBackStackEntry ->
+            val containerId = navBackStackEntry.arguments?.getString("containerId") ?: ""
+            val containerName = navBackStackEntry.arguments?.getString("containerName") ?: ""
+            TerminalScreen(
+                containerId = containerId,
+                containerName = containerName,
                 onBack = { navController.popBackStack() }
             )
         }
@@ -129,4 +149,5 @@ sealed class AppScreen(val route: String) {
     object ContainerDetails : AppScreen("container-details/{containerId}/{containerName}") {
         fun createRoute(containerId: String, containerName: String): String = "container-details/$containerId/${containerName}"
     }
+    object Terminal: AppScreen("terminal/{containerId}/{containerName}")
 }
