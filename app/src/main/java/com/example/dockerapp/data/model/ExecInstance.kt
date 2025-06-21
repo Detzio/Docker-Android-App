@@ -20,3 +20,8 @@ data class ExecStartRequest(
     val Detach: Boolean = false,
     val Tty: Boolean = false
 )
+
+data class CompleteCommand(
+    val command: String,
+    val result: String
+)

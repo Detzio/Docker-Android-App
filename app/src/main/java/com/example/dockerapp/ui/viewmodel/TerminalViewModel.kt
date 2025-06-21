@@ -14,6 +14,7 @@ import java.io.IOException
 import java.io.InputStream
 import java.nio.ByteBuffer
 import androidx.compose.runtime.State
+import com.example.dockerapp.data.model.CompleteCommand
 
 const val TAG = "TerminalViewModel"
 
@@ -25,8 +26,8 @@ class TerminalViewModel: ViewModel() {
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
-    private val _commandResults = mutableStateOf(listOf<String>())
-    val commandResults: State<List<String>> = _commandResults
+    private val _commandResults = mutableStateOf(listOf<CompleteCommand>())
+    val commandResults: State<List<CompleteCommand>> = _commandResults
 
     fun execCommand(command: String, containerId: String) {
         viewModelScope.launch {
@@ -48,8 +49,7 @@ class TerminalViewModel: ViewModel() {
                             val inputStream = startResponse.body()?.byteStream()
                             val output = parseDockerMultiplexedStream(inputStream!!)
                             Log.d(TAG, "Command Output: $output")
-                            _commandResults.value += "$ $command"
-                            _commandResults.value += output
+                            _commandResults.value += CompleteCommand("$ $command", output)
                         } else {
                             Log.e(TAG, "Failed to start exec: ${startResponse.code()}")
                             _error.value = "Une erreur est survenue"
@@ -84,7 +84,7 @@ class TerminalViewModel: ViewModel() {
                 throw IOException("Invalid Docker stream header")
             }
 
-            val streamType = buffer[0].toInt()
+            buffer[0].toInt()
             val payloadSize = ByteBuffer.wrap(buffer, 4, 4).int
 
             val payloadBuffer = ByteArray(payloadSize)
