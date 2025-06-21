@@ -6,12 +6,17 @@ import androidx.lifecycle.viewModelScope
 import com.example.dockerapp.data.api.RetrofitClient
 import com.example.dockerapp.data.model.Container
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 class HomeViewModel : ViewModel() {
+
+    private val TAG = "HomeViewModel"
+
     private val _containers = MutableStateFlow<List<Container>>(emptyList())
 
     private val _isLoading = MutableStateFlow(false)
@@ -30,7 +35,7 @@ class HomeViewModel : ViewModel() {
     val filteredContainers: StateFlow<List<Container>> = _filteredContainers
     
     private var loadContainersJob: Job? = null
-    private var containerActionJob: Job? = null
+    private var statsLoopJob: Job? = null
     
     init {
         viewModelScope.launch {
@@ -64,10 +69,14 @@ class HomeViewModel : ViewModel() {
     }
 
     fun loadContainers() {
-        viewModelScope.launch {
+        if (loadContainersJob?.isActive == true) return
+
+        Log.d(TAG, "loading containers...")
+
+        loadContainersJob = viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
-            
+
             try {
                 val response = RetrofitClient.apiService.getContainers()
                 if (response.isSuccessful) {
@@ -93,7 +102,7 @@ class HomeViewModel : ViewModel() {
             try {
                 val response = RetrofitClient.apiService.startContainer(containerId)
                 if (response.isSuccessful) {
-                    loadContainers() // Recharger la liste après l'action
+                     loadContainers() // Recharger la liste après l'action
                 } else {
                     _error.value = "Impossible de démarrer le conteneur"
                 }
@@ -108,7 +117,7 @@ class HomeViewModel : ViewModel() {
             try {
                 val response = RetrofitClient.apiService.stopContainer(containerId)
                 if (response.isSuccessful) {
-                    loadContainers()
+                     loadContainers()
                 } else {
                     _error.value = "Impossible d'arrêter le conteneur"
                 }
@@ -123,7 +132,7 @@ class HomeViewModel : ViewModel() {
             try {
                 val response = RetrofitClient.apiService.restartContainer(containerId)
                 if (response.isSuccessful) {
-                    loadContainers()
+                     loadContainers()
                 } else {
                     _error.value = "Impossible de redémarrer le conteneur"
                 }
@@ -133,52 +142,64 @@ class HomeViewModel : ViewModel() {
         }
     }   
 
-    fun loadContainerStats(containerId: String) {
-        viewModelScope.launch {
-            try {
-                val response = RetrofitClient.apiService.getContainerStats(containerId, stream = false)
-                if (response.isSuccessful) {
-                    val stats = response.body()
-                    stats?.let { containerStats ->
-                        val cpuPercentage = containerStats.calculateCpuPercentage()
-                        val memoryUsage = containerStats.memoryStats.usage
-                        
-                        Log.d("HomeViewModel", "Container $containerId stats: CPU=$cpuPercentage%, Memory=${memoryUsage}B")
-                        
-                        val updatedContainers = _containers.value.map { container ->
-                            if (container.id == containerId) {
-                                container.copy(
-                                    cpuUsage = cpuPercentage,
-                                    memoryUsage = memoryUsage
-                                )
-                            } else {
-                                container
-                            }
+    private suspend fun loadContainerStats(containerId: String) {
+        try {
+            val response = RetrofitClient.apiService.getContainerStats(containerId, stream = false)
+            if (response.isSuccessful) {
+                val stats = response.body()
+                stats?.let { containerStats ->
+                    val cpuPercentage = containerStats.calculateCpuPercentage()
+                    val memoryUsage = containerStats.memoryStats.usage
+
+                    Log.d("HomeViewModel", "Container ${containerStats.name} stats: CPU=$cpuPercentage%, Memory=${memoryUsage}B")
+
+                    val updatedContainers = _containers.value.map { container ->
+                        if (container.id == containerId) {
+                            container.copy(
+                                cpuUsage = cpuPercentage,
+                                memoryUsage = memoryUsage
+                            )
+                        } else {
+                            container
                         }
-                        _containers.value = updatedContainers
                     }
-                } else {
-                    Log.e("HomeViewModel", "Erreur stats conteneur $containerId: ${response.code()}")
+                    _containers.value = updatedContainers
                 }
-            } catch (e: Exception) {
-                Log.e("HomeViewModel", "Erreur stats conteneur $containerId", e)
+            } else {
+                Log.e("HomeViewModel", "Erreur stats conteneur $containerId: ${response.code()}")
             }
+        } catch (e: Exception) {
+            Log.e("HomeViewModel", "Erreur stats conteneur $containerId", e)
         }
     }
 
-    fun refreshContainersStats() {
-        viewModelScope.launch {
-            _containers.value
-                .filter { it.state.lowercase() == "running" }
-                .forEach { container ->
+    fun startStatsLoop(intervalPerRequestMs: Long = 200) {
+
+        if (statsLoopJob?.isActive == true) return
+
+        statsLoopJob = viewModelScope.launch {
+            Log.d(TAG, "startStatsLoop: started")
+            while (true) {
+                val runningContainers = _containers.value.filter { it.state.equals("running", ignoreCase = true) }
+
+                if (runningContainers.isEmpty()) {
+                    delay(intervalPerRequestMs)
+                }
+
+                for ((index, container) in runningContainers.withIndex()) {
                     try {
                         loadContainerStats(container.id)
                     } catch (e: Exception) {
                         Log.e("HomeViewModel", "Erreur refresh stats ${container.id}", e)
                     }
+
+                    delay(intervalPerRequestMs)
                 }
+
+            }
         }
     }
+
     private val _navigationEvent = MutableStateFlow<Pair<String, String>?>(null)
     val navigationEvent: StateFlow<Pair<String, String>?> = _navigationEvent
     
@@ -195,8 +216,6 @@ class HomeViewModel : ViewModel() {
         _detailsNavigationEvent.value = Pair(containerId, displayName)
     }
 
-
-    
     fun onNavigationHandled() {
         _navigationEvent.value = null
     }
@@ -208,6 +227,6 @@ class HomeViewModel : ViewModel() {
     override fun onCleared() {
         super.onCleared()
         loadContainersJob?.cancel()
-        containerActionJob?.cancel()
+        statsLoopJob?.cancel()
     }
 }

@@ -49,13 +49,6 @@ interface ApiService {
         @Path("id") containerId: String
     ): Response<ContainerDetails>
 
-//    @POST("containers/{id}/exec")
-//    suspend fun createExecInstance(
-//        @Path("id") containerId: String,
-//        @Query("AttachStdin") attachStdin: Boolean = true,
-//        @Query("AttachStdout") attachStdout: Boolean = true
-//    ): Response<ExecInstanceRequest>
-
     @POST("containers/{id}/exec")
     suspend fun createExecInstance(
         @Path("id") containerId: String,

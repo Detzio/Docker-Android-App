@@ -13,7 +13,9 @@ data class ContainerStats(
     @SerializedName("precpu_stats")
     val preCpuStats: CpuStats,
     @SerializedName("memory_stats")
-    val memoryStats: MemoryStats
+    val memoryStats: MemoryStats,
+    @SerializedName("name")
+    val name: String
 ) {
     @SuppressLint("DefaultLocale")
     fun calculateCpuPercentage(): Double {

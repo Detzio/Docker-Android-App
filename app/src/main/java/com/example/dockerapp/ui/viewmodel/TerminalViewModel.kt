@@ -16,9 +16,9 @@ import java.nio.ByteBuffer
 import androidx.compose.runtime.State
 import com.example.dockerapp.data.model.CompleteCommand
 
-const val TAG = "TerminalViewModel"
-
 class TerminalViewModel: ViewModel() {
+
+    private val TAG = "TerminalViewModel"
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading

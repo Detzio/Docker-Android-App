@@ -16,7 +16,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -60,8 +59,6 @@ import com.example.dockerapp.ui.theme.StatusPaused
 import com.example.dockerapp.ui.theme.StatusRunning
 import com.example.dockerapp.ui.theme.StatusStopped
 import com.example.dockerapp.ui.viewmodel.HomeViewModel
-import kotlinx.coroutines.delay
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,20 +73,8 @@ fun HomeScreen(
     val selectedStateFilter by homeViewModel.selectedStateFilter.collectAsState()
 
     LaunchedEffect(Unit) {
-        Log.d("HomeScreen", "Loading containers...")
         homeViewModel.loadContainers()
-    }
-
-    // Actualiser les statistiques toutes les 5 secondes pour les conteneurs en cours d'exécution
-    LaunchedEffect(Unit) {
-        while (true) {
-            try {
-                homeViewModel.refreshContainersStats()
-            } catch (e: Exception) {
-                Log.e("HomeScreen", "Erreur refresh stats", e)
-            }
-            delay(2000) // Rafraîchissement toutes les 2 secondes
-        }
+        homeViewModel.startStatsLoop()
     }
 
     Scaffold(
