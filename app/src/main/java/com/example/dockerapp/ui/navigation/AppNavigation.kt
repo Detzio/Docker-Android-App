@@ -15,6 +15,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.dockerapp.ui.screen.ContainerDetailsScreen
+import com.example.dockerapp.ui.screen.CreateContainerScreen
 import com.example.dockerapp.ui.screen.HomeScreen
 import com.example.dockerapp.ui.screen.LogsScreen
 import com.example.dockerapp.ui.screen.LoginScreen
@@ -84,6 +85,9 @@ fun AppNavigation(
             
             HomeScreen(
                 onLogout = handleLogout,
+                onNavigateToCreateContainer = {
+                    navController.navigate(AppScreen.CreateContainer.route)
+                },
                 homeViewModel = homeViewModel
             )
         }
@@ -137,6 +141,15 @@ fun AppNavigation(
                 onBack = { navController.popBackStack() }
             )
         }
+        
+        composable(AppScreen.CreateContainer.route) {
+            CreateContainerScreen(
+                onBack = { navController.popBackStack() },
+                onContainerCreated = {
+                    navController.popBackStack()
+                }
+            )
+        }
     }
 }
 
@@ -150,4 +163,5 @@ sealed class AppScreen(val route: String) {
         fun createRoute(containerId: String, containerName: String): String = "container-details/$containerId/${containerName}"
     }
     object Terminal: AppScreen("terminal/{containerId}/{containerName}")
+    object CreateContainer : AppScreen("create-container")
 }

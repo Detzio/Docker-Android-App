@@ -56,8 +56,7 @@ fun LogsScreen(
     LaunchedEffect(containerId) {
         logsViewModel.startLogsStreaming(containerId)
     }
-    
-    // Assure-toi que le streaming est arrêté quand l'écran est quitté
+
     DisposableEffect(Unit) {
         onDispose {
             logsViewModel.stopLogsStreaming()

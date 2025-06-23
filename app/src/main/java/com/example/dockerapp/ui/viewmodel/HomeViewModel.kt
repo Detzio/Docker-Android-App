@@ -224,6 +224,29 @@ class HomeViewModel : ViewModel() {
         _detailsNavigationEvent.value = null
     }
 
+    fun refreshContainers() {
+        loadContainers()
+    }
+
+    fun deleteContainer(containerId: String) {
+        viewModelScope.launch {
+            try {
+                val response = RetrofitClient.apiService.deleteContainer(containerId, force = false)
+                if (response.isSuccessful) {
+                    loadContainers() // Recharger la liste après suppression
+                } else {
+                    _error.value = when (response.code()) {
+                        409 -> "Impossible de supprimer un conteneur en cours d'exécution. Arrêtez-le d'abord."
+                        404 -> "Conteneur introuvable."
+                        else -> "Impossible de supprimer le conteneur (code: ${response.code()})"
+                    }
+                }
+            } catch (e: Exception) {
+                _error.value = "Erreur lors de la suppression: ${e.message}"
+            }
+        }
+    }
+
     override fun onCleared() {
         super.onCleared()
         loadContainersJob?.cancel()

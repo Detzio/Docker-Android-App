@@ -6,9 +6,14 @@ import com.example.dockerapp.data.model.ContainerDetails
 import com.example.dockerapp.data.model.ExecCreateRequest
 import com.example.dockerapp.data.model.ExecCreateResponse
 import com.example.dockerapp.data.model.ExecStartRequest
+import com.example.dockerapp.data.model.DockerImage
+import com.example.dockerapp.data.model.VolumeListResponse
+import com.example.dockerapp.data.model.ContainerCreateRequest
+import com.example.dockerapp.data.model.ContainerCreateResponse
 import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
@@ -60,4 +65,28 @@ interface ApiService {
         @Path("id") execId: String,
         @Body body: ExecStartRequest
     ): Response<ResponseBody>
+
+    @GET("images/json")
+    suspend fun getImages(): Response<List<DockerImage>>
+    
+    @GET("volumes")
+    suspend fun getVolumes(): Response<VolumeListResponse>
+    
+    @POST("containers/create")
+    suspend fun createContainer(
+        @Body body: ContainerCreateRequest,
+        @Query("name") name: String? = null
+    ): Response<ContainerCreateResponse>
+
+    @POST("images/create")
+    suspend fun pullImage(
+        @Query("fromImage") fromImage: String,
+        @Query("tag") tag: String? = null
+    ): Response<ResponseBody>
+    
+    @DELETE("containers/{id}")
+    suspend fun deleteContainer(
+        @Path("id") containerId: String,
+        @Query("force") force: Boolean = false
+    ): Response<Unit>
 }
