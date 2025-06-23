@@ -111,23 +111,6 @@ class CreateContainerViewModel : ViewModel() {
             try {
                 Log.d(TAG, "Starting delete process for image: $imageName")
                 
-                val response = RetrofitClient.apiService.deleteImage(imageName, force = false)
-                
-                Log.d(TAG, "Delete response code: ${response.code()}")
-                
-                if (response.isSuccessful) {
-                    Log.d(TAG, "Image deleted successfully: $imageName")
-                    // Recharger la liste des images
-                    loadImages()
-                } else {
-                    Log.e(TAG, "Failed to delete image: ${response.code()}")
-                    _error.value = when (response.code()) {
-                        409 -> "Impossible de supprimer l'image '$imageName'. Elle est utilisée par un ou plusieurs conteneurs."
-                        404 -> "Image '$imageName' introuvable."
-                        else -> "Impossible de supprimer l'image (code: ${response.code()})"
-                    }
-                }
-                
             } catch (e: Exception) {
                 Log.e(TAG, "Exception while deleting image", e)
                 _error.value = "Erreur lors de la suppression de l'image: ${e.message}"

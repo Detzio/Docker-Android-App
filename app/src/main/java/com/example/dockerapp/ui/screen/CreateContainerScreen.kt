@@ -78,7 +78,6 @@ fun CreateContainerScreen(
     val customImage by viewModel.customImage.collectAsState()
     val isCreating by viewModel.isCreating.collectAsState()
     val isPullingImage by viewModel.isPullingImage.collectAsState()
-    val isDeletingImage by viewModel.isDeletingImage.collectAsState()
     val creationSuccess by viewModel.creationSuccess.collectAsState()
     
     val snackbarHostState = remember { SnackbarHostState() }
@@ -218,12 +217,7 @@ fun CreateContainerScreen(
                             onSelect = { 
                                 Log.d("CreateContainerScreen", "Image selected: $it")
                                 viewModel.updateSelectedImage(it) 
-                            },
-                            onDelete = { imageName -> 
-                                Log.d("CreateContainerScreen", "Delete requested for image: $imageName")
-                                viewModel.deleteImage(imageName) 
-                            },
-                            isDeletingImage = isDeletingImage
+                            }
                         )
                     }
                 }
@@ -285,7 +279,6 @@ fun ImageCard(
     image: DockerImage,
     isSelected: Boolean,
     onSelect: (String) -> Unit,
-    onDelete: (String) -> Unit,
 ) {
     val displayName = image.repoTags?.firstOrNull() ?: image.id.take(12)
     
