@@ -79,6 +79,7 @@ fun CreateContainerScreen(
     val isCreating by viewModel.isCreating.collectAsState()
     val isPullingImage by viewModel.isPullingImage.collectAsState()
     val creationSuccess by viewModel.creationSuccess.collectAsState()
+    val isDeletingImage by viewModel.isDeletingImage.collectAsState()
     
     val snackbarHostState = remember { SnackbarHostState() }
     
@@ -217,7 +218,11 @@ fun CreateContainerScreen(
                             onSelect = { 
                                 Log.d("CreateContainerScreen", "Image selected: $it")
                                 viewModel.updateSelectedImage(it) 
-                            }
+                            },
+                            onDelete = { imageName ->
+                                viewModel.deleteImage(imageName)
+                            },
+                            isDeletingImage = isDeletingImage
                         )
                     }
                 }
@@ -279,8 +284,11 @@ fun ImageCard(
     image: DockerImage,
     isSelected: Boolean,
     onSelect: (String) -> Unit,
+    onDelete: (String) -> Unit,
+    isDeletingImage: Boolean
 ) {
     val displayName = image.repoTags?.firstOrNull() ?: image.id.take(12)
+    var showDeleteDialog by remember { mutableStateOf(false) }
     
     Card(
         modifier = Modifier
@@ -320,7 +328,51 @@ fun ImageCard(
                 )
             }
             
+            IconButton(
+                onClick = { showDeleteDialog = true },
+                enabled = !isDeletingImage
+            ) {
+                if (isDeletingImage) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Icon(
+                        Icons.Default.Delete,
+                        contentDescription = "Supprimer l'image",
+                        tint = Color.Red
+                    )
+                }
+            }
         }
+    }
+    
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Confirmer la suppression") },
+            text = { 
+                Text("Êtes-vous sûr de vouloir supprimer l'image '$displayName' ?")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        onDelete(displayName)
+                    }
+                ) {
+                    Text("Supprimer", color = Color.Red)
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showDeleteDialog = false }
+                ) {
+                    Text("Annuler")
+                }
+            }
+        )
     }
 }
 

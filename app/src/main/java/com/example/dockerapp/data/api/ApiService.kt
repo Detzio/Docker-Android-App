@@ -89,4 +89,10 @@ interface ApiService {
         @Path("id") containerId: String,
         @Query("force") force: Boolean = false
     ): Response<Unit>
+    
+    @DELETE("images/{name}")
+    suspend fun deleteImage(
+        @Path("name") imageName: String,
+        @Query("force") force: Boolean = false
+    ): Response<Unit>
 }
