@@ -20,6 +20,8 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -82,6 +84,8 @@ fun CreateContainerScreen(
     val isDeletingImage by viewModel.isDeletingImage.collectAsState()
     
     val snackbarHostState = remember { SnackbarHostState() }
+    var isImagesExpanded by remember { mutableStateOf(false) }
+    var isVolumesExpanded by remember { mutableStateOf(false) }
     
     LaunchedEffect(Unit) {
         Log.d("CreateContainerScreen", "Loading data...")
@@ -204,41 +208,99 @@ fun CreateContainerScreen(
                 // Images disponibles
                 if (images.isNotEmpty()) {
                     item {
-                        Text(
-                            text = "Images installées (${images.size})",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                    
-                    items(images) { image ->
-                        ImageCard(
-                            image = image,
-                            isSelected = selectedImage == (image.repoTags?.firstOrNull() ?: image.id),
-                            onSelect = { 
-                                Log.d("CreateContainerScreen", "Image selected: $it")
-                                viewModel.updateSelectedImage(it) 
-                            },
-                            onDelete = { imageName ->
-                                viewModel.deleteImage(imageName)
-                            },
-                            isDeletingImage = isDeletingImage
-                        )
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { isImagesExpanded = !isImagesExpanded }
+                                        .padding(16.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "Images installées (${images.size})",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Icon(
+                                        imageVector = if (isImagesExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                        contentDescription = if (isImagesExpanded) "Réduire" else "Étendre"
+                                    )
+                                }
+                                
+                                if (isImagesExpanded) {
+                                    Column(
+                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        images.forEach { image ->
+                                            ImageCard(
+                                                image = image,
+                                                isSelected = selectedImage == (image.repoTags?.firstOrNull() ?: image.id),
+                                                onSelect = { 
+                                                    Log.d("CreateContainerScreen", "Image selected: $it")
+                                                    viewModel.updateSelectedImage(it) 
+                                                },
+                                                onDelete = { imageName ->
+                                                    viewModel.deleteImage(imageName)
+                                                },
+                                                isDeletingImage = isDeletingImage
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
                 
                 // Volumes disponibles
                 if (volumes.isNotEmpty()) {
                     item {
-                        Text(
-                            text = "Volumes disponibles (${volumes.size})",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                    
-                    items(volumes.take(3)) { volume ->
-                        VolumeCard(volume = volume)
+                        Card(
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { isVolumesExpanded = !isVolumesExpanded }
+                                        .padding(16.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "Volumes disponibles (${volumes.size})",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Icon(
+                                        imageVector = if (isVolumesExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                        contentDescription = if (isVolumesExpanded) "Réduire" else "Étendre"
+                                    )
+                                }
+                                
+                                if (isVolumesExpanded) {
+                                    Column(
+                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        volumes.take(3).forEach { volume ->
+                                            VolumeCard(volume = volume)
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
                 
