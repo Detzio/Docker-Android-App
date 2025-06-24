@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -22,7 +23,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -51,28 +51,21 @@ fun LogsScreen(
     val error by logsViewModel.error.collectAsState()
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
-    
-    // Initialiser le streaming des logs
+
+    // Charger les logs au démarrage
     LaunchedEffect(containerId) {
-        logsViewModel.startLogsStreaming(containerId)
+        logsViewModel.loadLogs(containerId)
     }
-    
-    // Assure-toi que le streaming est arrêté quand l'écran est quitté
-    DisposableEffect(Unit) {
-        onDispose {
-            logsViewModel.stopLogsStreaming()
-        }
-    }
-    
-    // Défiler automatiquement vers le bas à chaque nouveau log
-    LaunchedEffect(logs.size) {
-        if (logs.isNotEmpty()) {
+
+    // Scroll vers le bas quand les logs changent et qu'ils ne sont pas vides
+    LaunchedEffect(logs, isLoading) {
+        if (logs.isNotEmpty() && !isLoading) {
             coroutineScope.launch {
-                listState.animateScrollToItem(logs.size - 1)
+                listState.scrollToItem(logs.size - 1)
             }
         }
     }
-    
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -91,6 +84,31 @@ fun LogsScreen(
                         )
                     }
                 },
+                actions = {
+                    IconButton(
+                        onClick = { 
+                            coroutineScope.launch {
+                                // Scroll vers le bas après refresh
+                                logsViewModel.refreshLogs(containerId)
+                            }
+                        },
+                        enabled = !isLoading
+                    ) {
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                color = LightOnPrimary,
+                                strokeWidth = 2.dp,
+                                modifier = Modifier.padding(4.dp)
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = "Actualiser",
+                                tint = LightOnPrimary
+                            )
+                        }
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = DockerDarkBlue
                 )
@@ -103,93 +121,89 @@ fun LogsScreen(
                 .padding(paddingValues)
                 .background(MaterialTheme.colorScheme.background)
         ) {
-            if (logs.isEmpty() && isLoading) {
-                // Affichage du chargement initial
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    CircularProgressIndicator(color = DockerBlue)
-                    Text(
-                        text = "Chargement des logs...",
-                        modifier = Modifier.padding(top = 16.dp),
-                        color = DockerBlue
-                    )
-                }
-            } else if (error != null) {
-                // Affichage des erreurs
-                Column(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "Erreur",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.error
-                    )
-                    Text(
-                        text = error ?: "Une erreur s'est produite",
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(vertical = 8.dp),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Button(
-                        onClick = { logsViewModel.startLogsStreaming(containerId) }
+            when {
+                isLoading && logs.isEmpty() -> {
+                    // Affichage du chargement initial
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text("Réessayer")
+                        CircularProgressIndicator(color = DockerBlue)
+                        Text(
+                            text = "Chargement des logs...",
+                            modifier = Modifier.padding(top = 16.dp),
+                            color = DockerBlue
+                        )
                     }
                 }
-            } else {
-                // Affichage des logs
-                Column(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    if (logs.isEmpty()) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(16.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "Aucun log disponible",
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        }
-                    } else {
-                        LazyColumn(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .weight(1f),
-                            state = listState
-                        ) {
-                            items(logs) { logLine ->
-                                Text(
-                                    text = logLine,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(horizontal = 16.dp, vertical = 2.dp),
-                                    color = getLogColor(logLine),
-                                    style = MaterialTheme.typography.bodySmall,
-                                )
+                
+                error != null -> {
+                    // Affichage des erreurs
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = "Erreur",
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                        Text(
+                            text = error ?: "Une erreur s'est produite",
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(vertical = 8.dp),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Button(
+                            onClick = { 
+                                logsViewModel.clearError()
+                                logsViewModel.loadLogs(containerId) 
                             }
+                        ) {
+                            Text("Réessayer")
                         }
                     }
                 }
                 
-                // Indicateur de chargement pendant le streaming
-                if (isLoading) {
-                    CircularProgressIndicator(
+                logs.isEmpty() -> {
+                    // Aucun log disponible
+                    Box(
                         modifier = Modifier
-                            .align(Alignment.BottomEnd)
+                            .fillMaxSize()
                             .padding(16.dp),
-                        color = DockerBlue,
-                        strokeWidth = 2.dp
-                    )
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Aucun log disponible",
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+                
+                else -> {
+                    // Affichage des logs
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        state = listState
+                    ) {
+                        items(
+                            items = logs,
+                            key = { index -> index }
+                        ) { logLine ->
+                            Text(
+                                text = logLine,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 2.dp),
+                                color = getLogColor(logLine),
+                                style = MaterialTheme.typography.bodySmall,
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -200,14 +214,14 @@ fun LogsScreen(
 @Composable
 fun getLogColor(logLine: String): Color {
     return when {
-        logLine.contains("error", ignoreCase = true) || 
-        logLine.contains("fail", ignoreCase = true) || 
-        logLine.contains("exception", ignoreCase = true) -> Color.Red
-        
+        logLine.contains("error", ignoreCase = true) ||
+                logLine.contains("fail", ignoreCase = true) ||
+                logLine.contains("exception", ignoreCase = true) -> Color.Red
+
         logLine.contains("warn", ignoreCase = true) -> Color(0xFFFFA500) // Orange
-        
+
         logLine.contains("info", ignoreCase = true) -> DockerBlue
-        
+
         else -> MaterialTheme.colorScheme.onSurface
     }
 }
