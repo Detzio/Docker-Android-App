@@ -59,8 +59,11 @@ import com.example.dockerapp.data.model.DockerImage
 import com.example.dockerapp.data.model.DockerVolume
 import com.example.dockerapp.ui.theme.DockerBlue
 import com.example.dockerapp.ui.theme.DockerDarkBlue
+import com.example.dockerapp.ui.theme.DockerOrange
 import com.example.dockerapp.ui.theme.LightBackground
 import com.example.dockerapp.ui.theme.LightOnPrimary
+import com.example.dockerapp.ui.theme.LightSurface
+import com.example.dockerapp.ui.theme.ErrorColor
 import com.example.dockerapp.ui.theme.StatusRunning
 import com.example.dockerapp.ui.viewmodel.CreateContainerViewModel
 import com.example.dockerapp.ui.components.RotatingDockerLogo
@@ -118,20 +121,20 @@ fun CreateContainerScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center
                     ) {
-                        DockerLogo(size = 32.dp, color = DockerBlue)
+                        DockerLogo(size = 32.dp, color = Color.White)
                         Spacer(modifier = Modifier.padding(horizontal = 8.dp))
-                        Text("Créer un conteneur", color = DockerBlue) 
+                        Text("Créer un conteneur", color = Color.White) 
                     }
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Retour")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Retour", tint = Color.White)
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = DockerDarkBlue,
-                    titleContentColor = DockerBlue,
-                    navigationIconContentColor = LightOnPrimary
+                    titleContentColor = Color.White,
+                    navigationIconContentColor = Color.White
                 )
             )
         },
@@ -145,7 +148,10 @@ fun CreateContainerScreen(
                     .padding(paddingValues),
                 contentAlignment = Alignment.Center
             ) {
-                RotatingDockerLogo(size = 64.dp)
+                RotatingDockerLogo(
+                    size = 64.dp,
+                    color = DockerBlue
+                )
             }
         } else {
             LazyColumn(
@@ -169,7 +175,8 @@ fun CreateContainerScreen(
                             Text(
                                 text = "Configuration",
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                color = DockerDarkBlue
                             )
                             
                             Spacer(modifier = Modifier.height(16.dp))
@@ -199,7 +206,8 @@ fun CreateContainerScreen(
                             Text(
                                 text = "Image personnalisée",
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
+                                fontWeight = FontWeight.Bold,
+                                color = DockerDarkBlue
                             )
                             
                             Spacer(modifier = Modifier.height(8.dp))
@@ -237,11 +245,13 @@ fun CreateContainerScreen(
                                     Text(
                                         text = "Images installées (${images.size})",
                                         style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold
+                                        fontWeight = FontWeight.Bold,
+                                        color = DockerDarkBlue
                                     )
                                     Icon(
                                         imageVector = if (isImagesExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                                        contentDescription = if (isImagesExpanded) "Réduire" else "Étendre"
+                                        contentDescription = if (isImagesExpanded) "Réduire" else "Étendre",
+                                        tint = DockerBlue
                                     )
                                 }
                                 
@@ -292,11 +302,13 @@ fun CreateContainerScreen(
                                     Text(
                                         text = "Volumes disponibles (${volumes.size})",
                                         style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold
+                                        fontWeight = FontWeight.Bold,
+                                        color = DockerDarkBlue
                                     )
                                     Icon(
                                         imageVector = if (isVolumesExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                                        contentDescription = if (isVolumesExpanded) "Réduire" else "Étendre"
+                                        contentDescription = if (isVolumesExpanded) "Réduire" else "Étendre",
+                                        tint = DockerBlue
                                     )
                                 }
                                 
@@ -322,21 +334,21 @@ fun CreateContainerScreen(
                         enabled = !isCreating && !isPullingImage && (selectedImage.isNotEmpty() || customImage.isNotEmpty()),
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = StatusRunning,
-                            contentColor = LightOnPrimary
+                            containerColor = DockerBlue,
+                            contentColor = Color.White
                         )
                     ) {
                         if (isPullingImage) {
                             RotatingDockerLogo(
                                 size = 24.dp,
-                                color = LightOnPrimary
+                                color = Color.White
                             )
                             Spacer(modifier = Modifier.padding(4.dp))
                             Text("Téléchargement...")
                         } else if (isCreating) {
                             RotatingDockerLogo(
                                 size = 24.dp,
-                                color = LightOnPrimary
+                                color = Color.White
                             )
                             Spacer(modifier = Modifier.padding(4.dp))
                             Text("Création...")
@@ -365,7 +377,7 @@ fun ImageCard(
         modifier = Modifier
             .fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) DockerBlue.copy(alpha = 0.1f) else Color.White
+            containerColor = if (isSelected) DockerBlue.copy(alpha = 0.1f) else LightSurface
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -389,7 +401,8 @@ fun ImageCard(
                 Text(
                     text = displayName,
                     style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
+                    color = if (isSelected) DockerDarkBlue else Color.Black
                 )
                 
                 Text(
@@ -406,13 +419,13 @@ fun ImageCard(
                 if (isDeletingImage) {
                     RotatingDockerLogo(
                         size = 20.dp,
-                        color = MaterialTheme.colorScheme.primary
+                        color = DockerBlue
                     )
                 } else {
                     Icon(
                         Icons.Default.Delete,
                         contentDescription = "Supprimer l'image",
-                        tint = Color.Red
+                        tint = ErrorColor
                     )
                 }
             }
@@ -433,7 +446,7 @@ fun ImageCard(
                         onDelete(displayName)
                     }
                 ) {
-                    Text("Supprimer", color = Color.Red)
+                    Text("Supprimer", color = ErrorColor)
                 }
             },
             dismissButton = {
@@ -451,7 +464,7 @@ fun ImageCard(
 fun VolumeCard(volume: DockerVolume) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = LightSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
@@ -462,7 +475,8 @@ fun VolumeCard(volume: DockerVolume) {
             Text(
                 text = volume.name,
                 style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Medium,
+                color = DockerBlue
             )
             
             Text(
@@ -487,3 +501,4 @@ private fun formatSize(bytes: Long): String {
         else -> String.format("%d B", bytes)
     }
 }
+
