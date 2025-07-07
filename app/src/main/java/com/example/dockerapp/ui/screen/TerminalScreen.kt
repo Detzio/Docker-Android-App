@@ -5,10 +5,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -43,6 +45,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.dockerapp.ui.theme.DockerDarkBlue
 import com.example.dockerapp.ui.theme.LightOnPrimary
 import com.example.dockerapp.ui.viewmodel.TerminalViewModel
+import com.example.dockerapp.ui.components.RotatingDockerLogo
+import com.example.dockerapp.ui.components.DockerLogo
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,10 +78,14 @@ fun TerminalScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        text = "Terminal: $containerName",
-                        color = LightOnPrimary
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        DockerLogo(size = 28.dp, color = LightOnPrimary)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Terminal: $containerName",
+                            color = LightOnPrimary
+                        )
+                    }
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
@@ -200,11 +208,10 @@ fun TerminalScreen(
                     .background(Color.Black.copy(alpha = 0.5f))
                     .clickable(enabled = false) {} // prevent interaction underneath
             ) {
-                CircularProgressIndicator(
+                RotatingDockerLogo(
+                    size = 48.dp,
                     color = Color.Green,
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .size(48.dp)
+                    modifier = Modifier.align(Alignment.Center)
                 )
             }
         }

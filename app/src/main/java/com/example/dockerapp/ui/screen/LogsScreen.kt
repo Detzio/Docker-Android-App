@@ -3,9 +3,12 @@ package com.example.dockerapp.ui.screen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -34,8 +37,16 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.dockerapp.ui.theme.DockerBlue
 import com.example.dockerapp.ui.theme.DockerDarkBlue
+import com.example.dockerapp.ui.theme.LightBackground
+import com.example.dockerapp.ui.theme.LightOnError
 import com.example.dockerapp.ui.theme.LightOnPrimary
+import com.example.dockerapp.ui.theme.LightSurface
+import com.example.dockerapp.ui.theme.StatusPaused
+import com.example.dockerapp.ui.theme.StatusRunning
+import com.example.dockerapp.ui.theme.StatusStopped
 import com.example.dockerapp.ui.viewmodel.LogsViewModel
+import com.example.dockerapp.ui.components.RotatingDockerLogo
+import com.example.dockerapp.ui.components.DockerLogo
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -70,10 +81,14 @@ fun LogsScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        text = "Logs: $containerName",
-                        color = LightOnPrimary
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        DockerLogo(size = 28.dp, color = LightOnPrimary)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Logs: $containerName",
+                            color = LightOnPrimary
+                        )
+                    }
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
@@ -95,10 +110,9 @@ fun LogsScreen(
                         enabled = !isLoading
                     ) {
                         if (isLoading) {
-                            CircularProgressIndicator(
-                                color = LightOnPrimary,
-                                strokeWidth = 2.dp,
-                                modifier = Modifier.padding(4.dp)
+                            RotatingDockerLogo(
+                                size = 24.dp,
+                                color = LightOnPrimary
                             )
                         } else {
                             Icon(
@@ -130,7 +144,10 @@ fun LogsScreen(
                             .padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        CircularProgressIndicator(color = DockerBlue)
+                        RotatingDockerLogo(
+                            size = 64.dp,
+                            color = DockerBlue
+                        )
                         Text(
                             text = "Chargement des logs...",
                             modifier = Modifier.padding(top = 16.dp),

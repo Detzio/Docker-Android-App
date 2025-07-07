@@ -67,6 +67,8 @@ import com.example.dockerapp.ui.theme.StatusPaused
 import com.example.dockerapp.ui.theme.StatusRunning
 import com.example.dockerapp.ui.theme.StatusStopped
 import com.example.dockerapp.ui.viewmodel.HomeViewModel
+import com.example.dockerapp.ui.components.RotatingDockerLogo
+import com.example.dockerapp.ui.components.DockerLogo
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -90,7 +92,16 @@ fun HomeScreen(
         topBar = {
             Column {
                 CenterAlignedTopAppBar(
-                    title = { Text("Docker App", color = DockerBlue) },
+                    title = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            DockerLogo(size = 32.dp)
+                            Spacer(modifier = Modifier.padding(horizontal = 8.dp))
+                            Text("Dock Pilot", color = DockerBlue)
+                        }
+                    },
                     actions = {
                         IconButton(onClick = onNavigateToCreateContainer) {
                             Icon(Icons.Default.Add, contentDescription = "Créer un conteneur")
@@ -178,8 +189,10 @@ fun HomeScreen(
         ) {
             when {
                 isLoading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center)
+                    RotatingDockerLogo(
+                        size = 64.dp,
+                        modifier = Modifier.align(Alignment.Center),
+                        color = DockerBlue
                     )
                 }
                 error != null -> {

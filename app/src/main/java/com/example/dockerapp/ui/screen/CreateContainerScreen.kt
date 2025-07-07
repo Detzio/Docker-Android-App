@@ -63,6 +63,8 @@ import com.example.dockerapp.ui.theme.LightBackground
 import com.example.dockerapp.ui.theme.LightOnPrimary
 import com.example.dockerapp.ui.theme.StatusRunning
 import com.example.dockerapp.ui.viewmodel.CreateContainerViewModel
+import com.example.dockerapp.ui.components.RotatingDockerLogo
+import com.example.dockerapp.ui.components.DockerLogo
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -111,7 +113,16 @@ fun CreateContainerScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Créer un conteneur", color = DockerBlue) },
+                title = { 
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        DockerLogo(size = 32.dp, color = DockerBlue)
+                        Spacer(modifier = Modifier.padding(horizontal = 8.dp))
+                        Text("Créer un conteneur", color = DockerBlue) 
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Retour")
@@ -134,7 +145,7 @@ fun CreateContainerScreen(
                     .padding(paddingValues),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator()
+                RotatingDockerLogo(size = 64.dp)
             }
         } else {
             LazyColumn(
@@ -316,18 +327,16 @@ fun CreateContainerScreen(
                         )
                     ) {
                         if (isPullingImage) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(16.dp),
-                                color = LightOnPrimary,
-                                strokeWidth = 2.dp
+                            RotatingDockerLogo(
+                                size = 24.dp,
+                                color = LightOnPrimary
                             )
                             Spacer(modifier = Modifier.padding(4.dp))
                             Text("Téléchargement...")
                         } else if (isCreating) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(16.dp),
-                                color = LightOnPrimary,
-                                strokeWidth = 2.dp
+                            RotatingDockerLogo(
+                                size = 24.dp,
+                                color = LightOnPrimary
                             )
                             Spacer(modifier = Modifier.padding(4.dp))
                             Text("Création...")
@@ -395,9 +404,9 @@ fun ImageCard(
                 enabled = !isDeletingImage
             ) {
                 if (isDeletingImage) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(16.dp),
-                        strokeWidth = 2.dp
+                    RotatingDockerLogo(
+                        size = 20.dp,
+                        color = MaterialTheme.colorScheme.primary
                     )
                 } else {
                     Icon(

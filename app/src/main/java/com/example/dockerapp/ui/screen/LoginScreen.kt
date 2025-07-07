@@ -13,6 +13,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.dockerapp.ui.viewmodel.LoginViewModel
+import com.example.dockerapp.ui.components.RotatingDockerLogo
+import com.example.dockerapp.ui.components.DockerLogo
 
 @Composable
 fun LoginScreen(
@@ -43,9 +45,9 @@ fun LoginScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                CircularProgressIndicator(
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(50.dp)
+                RotatingDockerLogo(
+                    size = 100.dp,
+                    color = MaterialTheme.colorScheme.primary
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
@@ -63,8 +65,10 @@ fun LoginScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
+                DockerLogo(size = 64.dp)
+                Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "Docker App",
+                    text = "Dock Pilot",
                     style = MaterialTheme.typography.headlineLarge,
                     color = MaterialTheme.colorScheme.primary,
                     fontSize = 32.sp,
@@ -124,9 +128,9 @@ fun LoginScreen(
                     enabled = username.isNotEmpty() && password.isNotEmpty() && serverUrl.isNotEmpty() && loginState != LoginViewModel.LoginState.Loading
                 ) {
                     if (loginState == LoginViewModel.LoginState.Loading) {
-                        CircularProgressIndicator(
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.size(24.dp)
+                        RotatingDockerLogo(
+                            size = 24.dp,
+                            color = MaterialTheme.colorScheme.onPrimary
                         )
                     } else {
                         Text("Se connecter")

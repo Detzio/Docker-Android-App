@@ -28,6 +28,8 @@ import kotlinx.coroutines.isActive
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import com.example.dockerapp.ui.components.RotatingDockerLogo
+import com.example.dockerapp.ui.components.DockerLogo
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,7 +72,13 @@ fun ContainerDetailsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(containerName) },
+                title = { 
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        DockerLogo(size = 28.dp, color = Color.White)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(containerName) 
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Retour")
@@ -95,11 +103,12 @@ fun ContainerDetailsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(LightSurface)
+                .background(LightBackground)
         ) {
             when {
                 isLoading -> {
-                    CircularProgressIndicator(
+                    RotatingDockerLogo(
+                        size = 64.dp,
                         modifier = Modifier.align(Alignment.Center),
                         color = DockerBlue
                     )
@@ -135,7 +144,7 @@ fun ContainerDetailsScreen(
                 containerDetails != null -> {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(12.dp),
+                        contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         // Actions du conteneur
@@ -217,9 +226,11 @@ fun ContainerActionsCard(
 ) {
     Card(
         modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp)),
-        colors = CardDefaults.cardColors(containerColor = DockerDarkBlue)
+            .fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = DockerDarkBlue),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 4.dp
+        )
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -249,8 +260,8 @@ fun ContainerActionsCard(
                             modifier = Modifier.weight(1f)
                         ) {
                             if (actionInProgress) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(16.dp),
+                                RotatingDockerLogo(
+                                    size = 20.dp,
                                     color = Color.White
                                 )
                             } else {
@@ -268,8 +279,8 @@ fun ContainerActionsCard(
                             modifier = Modifier.weight(1f)
                         ) {
                             if (actionInProgress) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(16.dp),
+                                RotatingDockerLogo(
+                                    size = 20.dp,
                                     color = Color.White
                                 )
                             } else {
@@ -288,8 +299,8 @@ fun ContainerActionsCard(
                             modifier = Modifier.weight(1f)
                         ) {
                             if (actionInProgress) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(16.dp),
+                                RotatingDockerLogo(
+                                    size = 20.dp,
                                     color = Color.White
                                 )
                             } else {
@@ -317,8 +328,8 @@ fun ContainerActionsCard(
                             modifier = Modifier.weight(1f)
                         ) {
                             if (actionInProgress) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(16.dp),
+                                RotatingDockerLogo(
+                                    size = 20.dp,
                                     color = Color.White
                                 )
                             } else {
@@ -536,7 +547,8 @@ fun MountsCard(mounts: List<com.example.dockerapp.data.model.Mount>) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 4.dp),
-                colors = CardDefaults.cardColors(containerColor = LightBackground)
+                colors = CardDefaults.cardColors(containerColor = LightSurface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Column(
                     modifier = Modifier.padding(12.dp)
@@ -559,8 +571,7 @@ fun EnvironmentCard(env: List<String>) {
         LazyColumn(
             modifier = Modifier
                 .height(200.dp)
-                .clip(RoundedCornerShape(4.dp))
-                .background(LightBackground)
+                .background(LightSurface, shape = MaterialTheme.shapes.small)
         ) {
             items(env) { variable ->
                 val parts = variable.split("=", limit = 2)
@@ -580,8 +591,7 @@ fun LabelsCard(labels: Map<String, String>) {
         LazyColumn(
             modifier = Modifier
                 .height(150.dp)
-                .clip(RoundedCornerShape(4.dp))
-                .background(LightBackground)
+                .background(LightSurface, shape = MaterialTheme.shapes.small)
         ) {
             items(labels.entries.toList()) { (key, value) ->
                 InfoRow(key, value, DockerBlue)
@@ -597,9 +607,11 @@ fun DetailCard(
 ) {
     Card(
         modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp)),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+            .fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 4.dp
+        )
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -679,3 +691,4 @@ private fun formatDateTime(dateTime: String): String {
         dateTime
     }
 }
+
