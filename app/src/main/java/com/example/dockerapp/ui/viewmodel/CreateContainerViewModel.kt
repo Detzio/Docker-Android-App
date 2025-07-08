@@ -10,6 +10,8 @@ import com.example.dockerapp.data.model.DockerVolume
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
+import okio.Buffer
 
 class CreateContainerViewModel : ViewModel() {
     
@@ -173,18 +175,25 @@ class CreateContainerViewModel : ViewModel() {
                 if (!success) {
                     Log.d(TAG, "Image not found, attempting to pull: $imageToUse")
                     _isPullingImage.value = true
+                
+                    kotlinx.coroutines.delay(1000)
                     
                     val pullSuccess = pullImageIfNeeded(imageToUse)
                     _isPullingImage.value = false
                     
                     if (pullSuccess) {
+                        kotlinx.coroutines.delay(2000)
                         createContainerWithImage(imageToUse)
                     }
                 }
                 
             } catch (e: Exception) {
                 Log.e(TAG, "Error creating container", e)
-                _error.value = "Erreur: ${e.message}"
+                _error.value = when (e) {
+                    is java.net.SocketTimeoutException -> "Timeout lors de la création. Vérifiez votre connexion Docker."
+                    is java.lang.IllegalStateException -> "Connexion interrompue. Le serveur Docker semble inaccessible."
+                    else -> "Erreur: ${e.message}"
+                }
             } finally {
                 _isCreating.value = false
                 _isPullingImage.value = false
@@ -224,7 +233,20 @@ class CreateContainerViewModel : ViewModel() {
             }
         } catch (e: Exception) {
             Log.e(TAG, "Exception in createContainerWithImage", e)
-            throw e
+            when (e) {
+                is java.net.SocketTimeoutException -> {
+                    _error.value = "Timeout lors de la création du conteneur. Vérifiez votre connexion Docker."
+                    false
+                }
+                is java.lang.IllegalStateException -> {
+                    _error.value = "Connexion interrompue. Le serveur Docker semble avoir un problème."
+                    false
+                }
+                else -> {
+                    _error.value = "Erreur de connexion: ${e.message}"
+                    false
+                }
+            }
         }
     }
     
@@ -243,17 +265,38 @@ class CreateContainerViewModel : ViewModel() {
             )
             
             if (response.isSuccessful) {
+                response.body()?.let { responseBody ->
+                    try {
+                        responseBody.use { body ->
+                            val source = body.source()
+                            val buffer = Buffer()
+                            while (!source.exhausted()) {
+                                source.read(buffer, 8192)
+                                buffer.clear()
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Error reading pull response stream, but pull might have succeeded", e)
+                    }
+                }
+                Log.d(TAG, "Image pull completed")
                 loadImages()
                 true
             } else {
+                Log.e(TAG, "Image pull failed with code: ${response.code()}")
                 _error.value = when (response.code()) {
                     404 -> "L'image '$imageToUse' n'existe pas sur Docker Hub."
-                    else -> "Impossible de télécharger l'image '$imageToUse'"
+                    else -> "Impossible de télécharger l'image '$imageToUse' (code: ${response.code()})"
                 }
                 false
             }
         } catch (e: Exception) {
-            _error.value = "Erreur lors du téléchargement de l'image: ${e.message}"
+            Log.e(TAG, "Exception during image pull", e)
+            _error.value = when (e) {
+                is java.net.SocketTimeoutException -> "Timeout lors du téléchargement de l'image. Vérifiez votre connexion."
+                is java.lang.IllegalStateException -> "Téléchargement interrompu. Veuillez réessayer."
+                else -> "Erreur lors du téléchargement de l'image: ${e.message}"
+            }
             false
         }
     }
