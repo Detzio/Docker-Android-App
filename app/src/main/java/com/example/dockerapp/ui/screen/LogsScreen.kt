@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -207,10 +208,10 @@ fun LogsScreen(
                         modifier = Modifier.fillMaxSize(),
                         state = listState
                     ) {
-                        items(
+                        itemsIndexed(
                             items = logs,
-                            key = { index -> index }
-                        ) { logLine ->
+                            key = { index, _ -> index }
+                        ) { index, logLine ->
                             Text(
                                 text = logLine,
                                 modifier = Modifier

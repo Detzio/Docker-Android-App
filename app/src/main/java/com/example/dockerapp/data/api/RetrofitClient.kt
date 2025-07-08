@@ -3,6 +3,7 @@ package com.example.dockerapp.data.api
 import okhttp3.Credentials
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import okhttp3.ResponseBody
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -24,24 +25,24 @@ object RetrofitClient {
     }
     
     private val authInterceptor = Interceptor { chain ->
-        val request = if (authUsername != null && authPassword != null) {
+        val originalRequest = chain.request()
+        val requestBuilder = originalRequest.newBuilder()
+        
+        if (authUsername != null && authPassword != null) {
             val credentials = Credentials.basic(authUsername!!, authPassword!!)
-            chain.request().newBuilder()
-                .header("Authorization", credentials)
-                .build()
-        } else {
-            chain.request()
+            requestBuilder.header("Authorization", credentials)
         }
-        chain.proceed(request)
+        val url = originalRequest.url.toString()
+        if (url.contains("/containers/create") || url.contains("/images/create")) {
+            requestBuilder.header("Connection", "close")
+        }
+        chain.proceed(requestBuilder.build())
     }
     
     // Ajout d'un intercepteur pour gérer les erreurs et éviter les accumulations
     private val errorInterceptor = Interceptor { chain ->
         try {
             val response = chain.proceed(chain.request())
-            if (!response.isSuccessful) {
-                response.close() // Fermer la réponse pour libérer la mémoire
-            }
             response
         } catch (e: Exception) {
             throw e
@@ -118,11 +119,12 @@ object RetrofitClient {
             .addInterceptor(authInterceptor)
             .addInterceptor(errorInterceptor)
             .addInterceptor(loggingInterceptor)
-            .connectTimeout(5, TimeUnit.SECONDS)
-            .readTimeout(8, TimeUnit.SECONDS)
-            .writeTimeout(8, TimeUnit.SECONDS)
-            .callTimeout(10, TimeUnit.SECONDS)
-            .retryOnConnectionFailure(false) // Désactiver les retry automatiques
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(120, TimeUnit.SECONDS)
+            .writeTimeout(120, TimeUnit.SECONDS)
+            .callTimeout(180, TimeUnit.SECONDS)
+            .retryOnConnectionFailure(true)
+            .connectionPool(okhttp3.ConnectionPool(0, 1, TimeUnit.NANOSECONDS))
             .build()
     }
 }
