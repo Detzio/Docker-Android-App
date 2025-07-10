@@ -374,8 +374,8 @@ private fun GrafanaContent(
                 item {
                     MetricSummaryCard(
                         title = "Réseau",
-                        value = "${String.format("%.2f", networkMetrics.lastOrNull()?.value ?: 0.0)} MB/s",
-                        subtitle = "Trafic I/O",
+                        value = "${String.format("%.2f", networkMetrics.lastOrNull()?.value ?: 0.0)}",
+                        subtitle = "Trafic I/O (MB/s)",
                         icon = {
                             Icon(
                                 Icons.Default.PlayArrow,
@@ -548,7 +548,11 @@ private fun DashboardCard(
                     items(dashboard.tags) { tag ->
                         AssistChip(
                             onClick = { },
-                            label = { Text(tag) }
+                            label = { Text(tag) },
+                            colors = AssistChipDefaults.assistChipColors(
+                                containerColor = DockerBlue.copy(alpha = 0.1f),
+                                labelColor = DockerBlue
+                            )
                         )
                     }
                 }
