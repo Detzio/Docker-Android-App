@@ -1,0 +1,122 @@
+package com.example.dockerapp.data.api
+
+import okhttp3.Credentials
+import okhttp3.Interceptor
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
+
+object GrafanaRetrofitClient {
+    private var baseUrl: String = ""
+    
+    private var authUsername: String? = null
+    private var authPassword: String? = null
+    
+    // Instances uniques réutilisables
+    private var _apiService: GrafanaApiService? = null
+    private var _okHttpClient: OkHttpClient? = null
+    private var _retrofit: Retrofit? = null
+    
+    private val loggingInterceptor = HttpLoggingInterceptor().apply {
+        level = HttpLoggingInterceptor.Level.BODY
+    }
+    
+    private val authInterceptor = Interceptor { chain ->
+        val originalRequest = chain.request()
+        val requestBuilder = originalRequest.newBuilder()
+        
+        if (authUsername != null && authPassword != null) {
+            val credentials = Credentials.basic(authUsername!!, authPassword!!)
+            requestBuilder.header("Authorization", credentials)
+        }
+        
+        requestBuilder.header("Content-Type", "application/json")
+        requestBuilder.header("Accept", "application/json")
+        
+        chain.proceed(requestBuilder.build())
+    }
+    
+    fun setCredentials(username: String, password: String, serverUrl: String) {
+        // Si les credentials changent, on doit recréer les instances
+        if (authUsername != username || authPassword != password || baseUrl != serverUrl) {
+            cleanup()
+            
+            authUsername = username
+            authPassword = password
+            
+            // Convertir l'URL Docker vers l'URL Grafana (port 3000)
+            var grafanaUrl = serverUrl.trim()
+            
+            // Supprimer '/info' s'il est présent
+            if (grafanaUrl.endsWith("/info")) {
+                grafanaUrl = grafanaUrl.substring(0, grafanaUrl.length - 5)
+            }
+            
+            // Remplacer le port par 3000
+            grafanaUrl = grafanaUrl.replace(":2376", ":3000")
+                .replace(":2377", ":3000")
+                .replace(":2375", ":3000")
+            
+            // S'assurer que l'URL se termine par '/'
+            if (!grafanaUrl.endsWith("/")) {
+                grafanaUrl += "/"
+            }
+            
+            baseUrl = grafanaUrl
+        }
+    }
+    
+    fun clearCredentials() {
+        cleanup()
+        authUsername = null
+        authPassword = null
+        baseUrl = ""
+    }
+    
+    private fun cleanup() {
+        _apiService = null
+        _retrofit = null
+        _okHttpClient?.let { client ->
+            try {
+                client.dispatcher.executorService.shutdown()
+                client.connectionPool.evictAll()
+            } catch (e: Exception) {
+                // Ignorer les erreurs de nettoyage
+            }
+        }
+        _okHttpClient = null
+    }
+    
+    val apiService: GrafanaApiService
+        get() {
+            return _apiService ?: createApiService().also { _apiService = it }
+        }
+    
+    private fun createApiService(): GrafanaApiService {
+        val retrofit = _retrofit ?: createRetrofit().also { _retrofit = it }
+        return retrofit.create(GrafanaApiService::class.java)
+    }
+    
+    private fun createRetrofit(): Retrofit {
+        val client = _okHttpClient ?: createOkHttpClient().also { _okHttpClient = it }
+        return Retrofit.Builder()
+            .baseUrl(baseUrl)
+            .client(client)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+    
+    private fun createOkHttpClient(): OkHttpClient {
+        return OkHttpClient.Builder()
+            .addInterceptor(authInterceptor)
+            .addInterceptor(loggingInterceptor)
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
+            .writeTimeout(60, TimeUnit.SECONDS)
+            .callTimeout(120, TimeUnit.SECONDS)
+            .retryOnConnectionFailure(true)
+            .build()
+    }
+}
