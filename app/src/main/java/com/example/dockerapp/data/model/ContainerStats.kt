@@ -24,18 +24,12 @@ data class ContainerStats(
             val systemDelta = (cpuStats.systemCpuUsage - preCpuStats.systemCpuUsage).toDouble()
             val onlineCpu = cpuStats.onlineCpu.toDouble()
 
-//            Log.d(TAG, "calculateCpuPercentage: cpuDelta: $cpuDelta")
-//            Log.d(TAG, "calculateCpuPercentage: systemDelta: $systemDelta")
-//            Log.d(TAG, "calculateCpuPercentage: onlineCpu: $onlineCpu")
-
             if (systemDelta <= 0 || cpuDelta < 0) {
                 return 0.0
             }
 
             // Nouveau calcul avec une meilleure précision
             val cpuPercent = ((cpuDelta / systemDelta) * onlineCpu * 100.0).coerceIn(0.0, 100.0)
-
-//            Log.d(TAG, "calculateCpuPercentage: result: $cpuPercent")
 
             // Arrondir à 2 décimales
             return (round(cpuPercent * 100) / 100.0)
@@ -70,11 +64,4 @@ data class MemoryStats(
     @SerializedName("limit")
     val limit: Long
 )
-
-// Version simplifiée pour réduire la consommation mémoire
-//data class SimpleContainerStats(
-//    val cpuPercentage: Float = 0f,
-//    val memoryUsage: Long = 0L,
-//    val memoryLimit: Long = 0L
-//)
 

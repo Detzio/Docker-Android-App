@@ -16,6 +16,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.dockerapp.ui.screen.ContainerDetailsScreen
 import com.example.dockerapp.ui.screen.CreateContainerScreen
+import com.example.dockerapp.ui.screen.GrafanaScreen
 import com.example.dockerapp.ui.screen.HomeScreen
 import com.example.dockerapp.ui.screen.LogsScreen
 import com.example.dockerapp.ui.screen.LoginScreen
@@ -88,6 +89,9 @@ fun AppNavigation(
                 onNavigateToCreateContainer = {
                     navController.navigate(AppScreen.CreateContainer.route)
                 },
+                onNavigateToGrafana = {
+                    navController.navigate(AppScreen.Grafana.route)
+                },
                 homeViewModel = homeViewModel
             )
         }
@@ -150,6 +154,12 @@ fun AppNavigation(
                 }
             )
         }
+        
+        composable(AppScreen.Grafana.route) {
+            GrafanaScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
     }
 }
 
@@ -164,4 +174,5 @@ sealed class AppScreen(val route: String) {
     }
     object Terminal: AppScreen("terminal/{containerId}/{containerName}")
     object CreateContainer : AppScreen("create-container")
+    object Grafana : AppScreen("grafana")
 }

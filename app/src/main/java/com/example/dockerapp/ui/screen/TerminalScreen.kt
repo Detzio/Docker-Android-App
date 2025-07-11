@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -18,7 +17,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -42,11 +40,11 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.dockerapp.ui.components.DockerLogo
+import com.example.dockerapp.ui.components.RotatingDockerLogo
 import com.example.dockerapp.ui.theme.DockerDarkBlue
 import com.example.dockerapp.ui.theme.LightOnPrimary
 import com.example.dockerapp.ui.viewmodel.TerminalViewModel
-import com.example.dockerapp.ui.components.RotatingDockerLogo
-import com.example.dockerapp.ui.components.DockerLogo
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

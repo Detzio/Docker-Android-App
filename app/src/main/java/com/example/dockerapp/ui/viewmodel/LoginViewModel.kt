@@ -104,12 +104,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
-    
-    // Réinitialiser l'état de connexion
-    fun resetLoginState() {
-        _loginState.value = LoginState.Idle
-    }
-    
+
     // Assurer le nettoyage lors de la destruction du ViewModel
     override fun onCleared() {
         super.onCleared()

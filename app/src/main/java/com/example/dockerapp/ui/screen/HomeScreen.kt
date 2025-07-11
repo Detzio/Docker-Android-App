@@ -1,7 +1,6 @@
 package com.example.dockerapp.ui.screen
 
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,13 +19,13 @@ import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -75,6 +74,7 @@ import com.example.dockerapp.ui.components.DockerLogo
 fun HomeScreen(
     onLogout: () -> Unit,
     onNavigateToCreateContainer: () -> Unit = {},
+    onNavigateToGrafana: () -> Unit = {},
     homeViewModel: HomeViewModel = viewModel()
 ) {
     val containers by homeViewModel.filteredContainers.collectAsState()
@@ -103,8 +103,8 @@ fun HomeScreen(
                         }
                     },
                     actions = {
-                        IconButton(onClick = onNavigateToCreateContainer) {
-                            Icon(Icons.Default.Add, contentDescription = "Créer un conteneur")
+                        IconButton(onClick = onNavigateToGrafana) {
+                            Icon(Icons.Default.Info, contentDescription = "Grafana Dashboard")
                         }
                         IconButton(onClick = onLogout) {
                             Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Déconnexion")
@@ -126,6 +126,15 @@ fun HomeScreen(
                         .padding(horizontal = 16.dp),
                     placeholder = { Text("Rechercher un conteneur...") },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    trailingIcon = {
+                        IconButton(onClick = onNavigateToCreateContainer) {
+                            Icon(
+                                Icons.Default.Add,
+                                contentDescription = "Créer un conteneur",
+                                tint = DockerBlue
+                            )
+                        }
+                    },
                     singleLine = true,
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = LightSurface,

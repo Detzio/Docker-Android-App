@@ -13,22 +13,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -51,23 +47,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.dockerapp.data.model.DockerImage
 import com.example.dockerapp.data.model.DockerVolume
+import com.example.dockerapp.ui.components.DockerLogo
+import com.example.dockerapp.ui.components.RotatingDockerLogo
 import com.example.dockerapp.ui.theme.DockerBlue
 import com.example.dockerapp.ui.theme.DockerDarkBlue
-import com.example.dockerapp.ui.theme.DockerOrange
-import com.example.dockerapp.ui.theme.LightBackground
-import com.example.dockerapp.ui.theme.LightOnPrimary
-import com.example.dockerapp.ui.theme.LightSurface
 import com.example.dockerapp.ui.theme.ErrorColor
-import com.example.dockerapp.ui.theme.StatusRunning
+import com.example.dockerapp.ui.theme.LightBackground
+import com.example.dockerapp.ui.theme.LightSurface
 import com.example.dockerapp.ui.viewmodel.CreateContainerViewModel
-import com.example.dockerapp.ui.components.RotatingDockerLogo
-import com.example.dockerapp.ui.components.DockerLogo
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

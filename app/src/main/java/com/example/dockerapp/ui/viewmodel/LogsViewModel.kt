@@ -63,7 +63,7 @@ class LogsViewModel : ViewModel() {
         }
     }
     
-    private suspend fun handleLogsResponse(response: Response<ResponseBody>) {
+    private fun handleLogsResponse(response: Response<ResponseBody>) {
         Log.d("LogsViewModel", "Traitement des logs")
         
         val responseBody = response.body()
