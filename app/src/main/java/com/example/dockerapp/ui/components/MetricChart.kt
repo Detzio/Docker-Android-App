@@ -1,22 +1,32 @@
 package com.example.dockerapp.ui.components
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.dockerapp.ui.theme.DockerBlue
 import com.example.dockerapp.ui.viewmodel.MetricPoint
-import kotlin.math.max
-import kotlin.math.min
 
 @Composable
 fun MetricChart(
@@ -120,7 +130,7 @@ private fun LineChart(
         val points = data.map { point ->
             val x = padding + ((point.timestamp - minTime).toFloat() / timeRange.toFloat()) * (width - 2 * padding)
             val y = height - padding - ((point.value - minValue).toFloat() / valueRange.toFloat()) * (height - 2 * padding)
-            Offset(x, y.toFloat())
+            Offset(x, y)
         }
         
         // Dessiner la ligne
@@ -153,8 +163,7 @@ private fun LineChart(
             minValue = minValue,
             maxValue = maxValue,
             height = height,
-            padding = padding,
-            color = Color.Black
+            padding = padding
         )
     }
 }
@@ -217,19 +226,18 @@ private fun DrawScope.drawGrid(
     }
 }
 
-private fun DrawScope.drawValueLabels(
+private fun drawValueLabels(
     minValue: Double,
     maxValue: Double,
     height: Float,
-    padding: Float,
-    color: Color
+    padding: Float
 ) {
     val valueRange = maxValue - minValue
     val steps = 5
     
     for (i in 0..steps) {
         val value = minValue + (valueRange * i / steps)
-        val y = height - padding - ((value - minValue).toFloat() / valueRange.toFloat()) * (height - 2 * padding)
+        height - padding - ((value - minValue).toFloat() / valueRange.toFloat()) * (height - 2 * padding)
     
     }
 }

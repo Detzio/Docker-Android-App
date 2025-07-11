@@ -4,20 +4,18 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -36,18 +34,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.dockerapp.ui.components.DockerLogo
+import com.example.dockerapp.ui.components.RotatingDockerLogo
 import com.example.dockerapp.ui.theme.DockerBlue
 import com.example.dockerapp.ui.theme.DockerDarkBlue
-import com.example.dockerapp.ui.theme.LightBackground
-import com.example.dockerapp.ui.theme.LightOnError
 import com.example.dockerapp.ui.theme.LightOnPrimary
-import com.example.dockerapp.ui.theme.LightSurface
-import com.example.dockerapp.ui.theme.StatusPaused
-import com.example.dockerapp.ui.theme.StatusRunning
-import com.example.dockerapp.ui.theme.StatusStopped
 import com.example.dockerapp.ui.viewmodel.LogsViewModel
-import com.example.dockerapp.ui.components.RotatingDockerLogo
-import com.example.dockerapp.ui.components.DockerLogo
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)

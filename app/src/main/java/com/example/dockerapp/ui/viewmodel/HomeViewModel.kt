@@ -10,7 +10,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 class HomeViewModel : ViewModel() {
@@ -222,10 +221,6 @@ class HomeViewModel : ViewModel() {
     
     fun onDetailsNavigationHandled() {
         _detailsNavigationEvent.value = null
-    }
-
-    fun refreshContainers() {
-        loadContainers()
     }
 
     fun deleteContainer(containerId: String) {

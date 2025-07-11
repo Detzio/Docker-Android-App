@@ -147,7 +147,7 @@ class GrafanaViewModel(application: Application) : AndroidViewModel(application)
                 val prometheusDataSource = dataSources.find { it.type == "prometheus" }
                 if (prometheusDataSource != null) {
                     // Charger les métriques disponibles
-                    val metrics = repository.getAvailableMetrics(prometheusDataSource.uid)
+                    val metrics = repository.getAvailableMetrics()
                     _availableMetrics.value = metrics
                     
                     loadDefaultMetrics(prometheusDataSource.uid)

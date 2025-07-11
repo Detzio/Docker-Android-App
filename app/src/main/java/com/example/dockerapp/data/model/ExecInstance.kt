@@ -1,12 +1,5 @@
 package com.example.dockerapp.data.model
 
-import com.google.gson.annotations.SerializedName
-//
-//data class ExecInstanceRequest (
-//    @SerializedName("id")
-//    val id: String
-//)
-
 data class ExecCreateRequest(
     val AttachStdout: Boolean = true,
     val AttachStderr: Boolean = true,

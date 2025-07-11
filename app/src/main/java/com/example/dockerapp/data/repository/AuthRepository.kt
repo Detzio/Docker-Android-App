@@ -25,7 +25,7 @@ class AuthRepository(private val userCredentialsDao: UserCredentialsDao) {
         }
     }
     
-    suspend fun saveCredentials(username: String, password: String, serverUrl: String) {
+    private suspend fun saveCredentials(username: String, password: String, serverUrl: String) {
         // Désactive tous les identifiants existants avant d'en ajouter un nouveau
         userCredentialsDao.deactivateAllCredentials()
         // Sauvegarde les nouveaux identifiants comme actifs

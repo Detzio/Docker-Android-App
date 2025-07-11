@@ -51,20 +51,7 @@ class GrafanaRepository(private val grafanaCredentialsDao: GrafanaCredentialsDao
             emptyList()
         }
     }
-    
-    suspend fun getDashboard(uid: String): GrafanaDashboardDetail? {
-        return try {
-            val response = GrafanaRetrofitClient.apiService.getDashboard(uid)
-            if (response.isSuccessful) {
-                response.body()
-            } else {
-                null
-            }
-        } catch (e: Exception) {
-            null
-        }
-    }
-    
+
     suspend fun getDataSources(): List<GrafanaDataSource> {
         return try {
             val response = GrafanaRetrofitClient.apiService.getDataSources()
@@ -110,7 +97,7 @@ class GrafanaRepository(private val grafanaCredentialsDao: GrafanaCredentialsDao
         }
     }
     
-    suspend fun getAvailableMetrics(dataSourceUid: String): List<String> {
+    fun getAvailableMetrics(): List<String> {
         return try {
             // Essayer de récupérer les métriques disponibles via l'API label values
             val commonMetrics = listOf(

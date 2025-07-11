@@ -1,9 +1,14 @@
 package com.example.dockerapp.data.api
 
-import com.example.dockerapp.data.model.*
-import okhttp3.ResponseBody
+import com.example.dockerapp.data.model.GrafanaDashboard
+import com.example.dockerapp.data.model.GrafanaDataSource
+import com.example.dockerapp.data.model.GrafanaHealth
+import com.example.dockerapp.data.model.GrafanaQueryResponse
 import retrofit2.Response
-import retrofit2.http.*
+import retrofit2.http.Body
+import retrofit2.http.GET
+import retrofit2.http.POST
+import retrofit2.http.Query
 
 interface GrafanaApiService {
     
@@ -21,11 +26,7 @@ interface GrafanaApiService {
         @Query("starred") starred: Boolean? = null,
         @Query("limit") limit: Int = 5000
     ): Response<List<GrafanaDashboard>>
-    
-    // Get dashboard by UID
-    @GET("api/dashboards/uid/{uid}")
-    suspend fun getDashboard(@Path("uid") uid: String): Response<GrafanaDashboardDetail>
-    
+
     // Query data
     @POST("api/ds/query")
     suspend fun queryData(
@@ -35,10 +36,7 @@ interface GrafanaApiService {
     // Get data sources
     @GET("api/datasources")
     suspend fun getDataSources(): Response<List<GrafanaDataSource>>
-    
-    // Get data source by UID
-    @GET("api/datasources/uid/{uid}")
-    suspend fun getDataSource(@Path("uid") uid: String): Response<GrafanaDataSource>
+
 }
 
 data class GrafanaQueryRequest(

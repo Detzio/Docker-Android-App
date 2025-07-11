@@ -23,8 +23,7 @@ fun LoginScreen(
 ) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var serverUrl by remember { mutableStateOf("") } // Valeur par défaut
-    var isPasswordVisible by remember { mutableStateOf(false) }
+    var serverUrl by remember { mutableStateOf("") }
     val loginState by viewModel.loginState.collectAsState()
     val isAuthenticated by viewModel.isAuthenticated.collectAsState()
     val isInitialCheckInProgress by viewModel.isInitialCheckInProgress.collectAsState()
