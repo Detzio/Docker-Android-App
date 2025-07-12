@@ -1,3 +1,4 @@
+
 # DockPilot - Application Android de Gestion Docker
 
 ## Table des matières
@@ -120,79 +121,125 @@ Retrofit2 avec OkHttp3 pour les appels API Docker :
 ## Hébergement et déploiement
 
 ### 3.1 Infrastructure Docker
-L'application se connecte à des instances Docker hébergées sur différentes plateformes :
+L'application se connecte à une instance Docker hébergées sur un serveur sur le reseau local chez Dorian. Il y a aussi 2 redirections de port NAT sur le routeur, le 2375(API Docker) et le 3000(Grafana).
 
-#### Configuration serveur Docker
+#### Configuration du serveur Docker
+
+Pour cela on doit modifier le fichier service Docker:
+
 ```bash
-# Configuration Docker Daemon avec TLS
-dockerd \
-  --host=0.0.0.0:2376 \
-  --tlsverify \
-  --tlscacert=ca.pem \
-  --tlscert=server-cert.pem \
-  --tlskey=server-key.pem
+sudo systemctl edit docker
 ```
 
-#### Docker Compose pour l'environnement de test
+et ensuite ajouter cette ligne:
+```bash
+ExecStart=/usr/bin/dockerd -H fd:// -H tcp://127.0.0.1:2375
+```
+
+Cela permet d'écouter les appels API sur le port 2375
+
+#### Configuration NGINX et SSL
+
+Le serveur NGINX est configuré en tant que reverse proxy. Il gère l’authentification Basic Auth, le chiffrement SSL, ainsi que la redirection automatique du trafic HTTP vers HTTPS.
+
+Voici le fichier de configuration NGINX:
+```
+server {
+    listen 2376;
+
+    location / {
+        proxy_pass http://127.0.0.1:2375;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+
+        auth_basic "Docker API";
+        auth_basic_user_file /etc/nginx/.htpasswd;
+    }
+}
+
+server {
+    listen 2377 ssl;
+    server_name dorian.sh www.dorian.sh;
+
+    # SSL certificates
+    ssl_certificate /home/dorian/Docker/Certbot/conf/live/dorian.sh/fullchain.pem;
+    ssl_certificate_key /home/dorian/Docker/Certbot/conf/live/dorian.sh/privkey.pem;
+
+    # Optional SSL settings
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers 'ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256';
+    ssl_prefer_server_ciphers off;
+
+    # Reverse proxy settings
+    location / {
+        proxy_pass http://127.0.0.1:2375;  # Replace with your backend server address (e.g., another container or local service)
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+	
+        auth_basic "Docker API";
+        auth_basic_user_file /etc/nginx/.htpasswd;
+    }
+}
+
+
+server {
+    listen 3000 ssl;
+    server_name dorian.sh www.dorian.sh;
+
+    # SSL certificates
+    ssl_certificate /home/dorian/Docker/Certbot/conf/live/dorian.sh/fullchain.pem;
+    ssl_certificate_key /home/dorian/Docker/Certbot/conf/live/dorian.sh/privkey.pem;
+
+    # Reverse proxy settings
+    location / {
+        proxy_pass http://127.0.0.1:3001;  # Replace with your backend server address (e.g., another container or local service)
+	proxy_set_header Host $http_host;
+    }
+}
+```
+
+### 3.2 Monitoring Grafana
+Nous avons également mis en place un service Grafana permettant de superviser les conteneurs à l’aide de ``cAdvisor`` et ``Prometheus``.
+
+#### Docker Compose
 ```yaml
-version: '3.8'
 services:
-  docker-proxy:
-    image: alpine/socat
-    command: tcp-listen:2375,fork,reuseaddr tcp-connect:host.docker.internal:2375
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor
+    restart: always
     ports:
-      - "2375:2375"
-    
+      - "8080:8080"
+    volumes:
+    - /:/rootfs:ro
+    - /var/run:/var/run:rw
+    - /sys:/sys:ro
+    - /var/lib/docker/:/var/lib/docker:ro
+    privileged: true
+
+  prometheus:
+    image: prom/prometheus
+    restart: always
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana
+    restart: always
     ports:
-      - "3000:3000"
+      - "3001:3000"
     environment:
+      - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
     volumes:
-      - grafana-data:/var/lib/grafana
-      
+      - grafana-data:/var/lib/grafana*
+	     
 volumes:
   grafana-data:
 ```
-
-### 3.2 Hébergement cloud
-L'application a été testée avec plusieurs providers :
-
-#### DigitalOcean Droplet
-- Instance Ubuntu 22.04 LTS
-- Docker installé avec docker-compose
-- Certificats TLS auto-générés
-- Firewall configuré (ports 22, 2376, 3000)
-
-#### Configuration réseau
-```bash
-# Ouverture des ports nécessaires
-ufw allow 22/tcp
-ufw allow 2376/tcp
-ufw allow 3000/tcp
-ufw enable
-
-# Configuration Docker daemon
-cat > /etc/docker/daemon.json << EOF
-{
-  "hosts": ["tcp://0.0.0.0:2376", "unix:///var/run/docker.sock"],
-  "tls": true,
-  "tlscert": "/etc/docker/server-cert.pem",
-  "tlskey": "/etc/docker/server-key.pem",
-  "tlsverify": true,
-  "tlscacert": "/etc/docker/ca.pem"
-}
-EOF
-```
-
-### 3.3 Sécurité
-- Authentification TLS mutuelle
-- Credentials chiffrés dans la base locale
-- Validation des certificats côté client
-- Timeouts configurés pour éviter les attaques DoS
-
----
 
 ## Implémentation technique
 
