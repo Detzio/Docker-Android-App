@@ -857,7 +857,10 @@ L'application DockPilot démontre la faisabilité technique de solutions mobiles
 
 ---
 
-**Auteurs** : Team Chamallow : Dorian, Thomas, Tony
+**Auteurs** : Team Chamallow : Dorian, Thomas, Tony 
+
 **Date** : 11/07/2025
+
 **Version** : 1.0  
+
 **Technologies** : Kotlin, Jetpack Compose, Docker API, Room, Retrofit2
