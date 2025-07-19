@@ -90,7 +90,7 @@ fun AppNavigation(
                     navController.navigate(AppScreen.CreateContainer.route)
                 },
                 onNavigateToGrafana = {
-                    navController.navigate(AppScreen.Grafana.route)
+                    navController.navigate(AppScreen.Metrics.route)
                 },
                 homeViewModel = homeViewModel
             )
@@ -155,7 +155,7 @@ fun AppNavigation(
             )
         }
         
-        composable(AppScreen.Grafana.route) {
+        composable(AppScreen.Metrics.route) {
             GrafanaScreen(
                 onBack = { navController.popBackStack() }
             )
@@ -174,5 +174,5 @@ sealed class AppScreen(val route: String) {
     }
     object Terminal: AppScreen("terminal/{containerId}/{containerName}")
     object CreateContainer : AppScreen("create-container")
-    object Grafana : AppScreen("grafana")
+    object Metrics : AppScreen("metrics")
 }

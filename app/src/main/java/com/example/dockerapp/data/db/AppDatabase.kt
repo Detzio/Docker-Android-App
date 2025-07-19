@@ -7,12 +7,10 @@ import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.dockerapp.data.model.UserCredentials
-import com.example.dockerapp.data.model.GrafanaCredentials
 
-@Database(entities = [UserCredentials::class, GrafanaCredentials::class], version = 4, exportSchema = false)
+@Database(entities = [UserCredentials::class], version = 5, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userCredentialsDao(): UserCredentialsDao
-    abstract fun grafanaCredentialsDao(): GrafanaCredentialsDao
     
     companion object {
         @Volatile
@@ -33,6 +31,13 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
         
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Supprimer la table grafana_credentials
+                database.execSQL("DROP TABLE IF EXISTS `grafana_credentials`")
+            }
+        }
+        
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -40,7 +45,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "docker_app_database"
                 )
-                .addMigrations(MIGRATION_3_4)
+                .addMigrations(MIGRATION_3_4, MIGRATION_4_5)
                 .fallbackToDestructiveMigration() // Pour gérer la migration de version
                 .build()
                 INSTANCE = instance
