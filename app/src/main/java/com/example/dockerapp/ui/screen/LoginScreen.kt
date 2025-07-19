@@ -77,7 +77,10 @@ fun LoginScreen(
                 // Champ pour l'URL du serveur
                 OutlinedTextField(
                     value = serverUrl,
-                    onValueChange = { serverUrl = it },
+                    onValueChange = { 
+                        serverUrl = it
+                        viewModel.clearLoginError()
+                    },
                     label = { Text("URL du serveur") },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -92,7 +95,10 @@ fun LoginScreen(
 
                 OutlinedTextField(
                     value = username,
-                    onValueChange = { username = it },
+                    onValueChange = { 
+                        username = it
+                        viewModel.clearLoginError()
+                    },
                     label = { Text("Nom d'utilisateur") },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -106,7 +112,10 @@ fun LoginScreen(
 
                 OutlinedTextField(
                     value = password,
-                    onValueChange = { password = it },
+                    onValueChange = { 
+                        password = it
+                        viewModel.clearLoginError()
+                    },
                     label = { Text("Mot de passe") },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -142,6 +151,16 @@ fun LoginScreen(
                         color = Color.Red,
                         modifier = Modifier.padding(top = 16.dp)
                     )
+                    
+                    if ((loginState as LoginViewModel.LoginState.Error).message.contains("Connexion expirée")) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(
+                            onClick = { viewModel.retryConnection() },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Réessayer la connexion automatique")
+                        }
+                    }
                 }
             }
         }

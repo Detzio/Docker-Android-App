@@ -24,6 +24,18 @@ class AuthRepository(private val userCredentialsDao: UserCredentialsDao) {
             false
         }
     }
+
+    suspend fun verifyExistingCredentials(username: String, password: String, serverUrl: String): Boolean {
+        RetrofitClient.setCredentials(username, password, serverUrl)
+        
+        return try {
+            val response = RetrofitClient.apiService.getInfo()
+            response.isSuccessful
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
     
     private suspend fun saveCredentials(username: String, password: String, serverUrl: String) {
         // Désactive tous les identifiants existants avant d'en ajouter un nouveau

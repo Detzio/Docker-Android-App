@@ -3,6 +3,7 @@ package com.example.dockerapp.ui.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.dockerapp.data.api.RetrofitClient
 import com.example.dockerapp.data.db.AppDatabase
 import com.example.dockerapp.data.repository.AuthRepository
 import kotlinx.coroutines.Job
@@ -47,23 +48,48 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         }
         
         credentialCheckJob = viewModelScope.launch {
-            repository.getActiveCredentials().collect { credentials ->
-                // Ne procéder que si le checking est toujours activé
-                if (credentials != null && checkingEnabled) {
-                    try {
-                        val success = repository.login(
-                            credentials.username, 
-                            credentials.password,
-                            credentials.serverUrl
-                        )
-                        _isAuthenticated.value = success
-                    } catch (e: Exception) {
-                        // Gérer les erreurs silencieusement pour la connexion automatique
+            try {
+                repository.getActiveCredentials().collect { credentials ->
+                    // Ne procéder que si le checking est toujours activé
+                    if (credentials != null && checkingEnabled) {
+                        try {
+                            // D'abord configurer les credentials dans RetrofitClient
+                            RetrofitClient.setCredentials(
+                                credentials.username, 
+                                credentials.password,
+                                credentials.serverUrl
+                            )
+                            
+                            // Ensuite tester la connexion
+                            val success = repository.login(
+                                credentials.username, 
+                                credentials.password,
+                                credentials.serverUrl
+                            )
+                            _isAuthenticated.value = success
+                            
+                            // Si la connexion échoue, ne pas supprimer les credentials
+                            // mais permettre à l'utilisateur de réessayer
+                            if (!success) {
+                                _loginState.value = LoginState.Error("Connexion expirée, veuillez vous reconnecter")
+                            }
+                        } catch (e: Exception) {
+                            // En cas d'erreur réseau, garder les credentials mais indiquer l'échec
+                            _isAuthenticated.value = false
+                            _loginState.value = LoginState.Error("Erreur de connexion: ${e.message}")
+                        }
+                    } else {
+                        // Pas de credentials sauvegardés
                         _isAuthenticated.value = false
                     }
+                    // Indiquer que la vérification initiale est terminée
+                    _isInitialCheckInProgress.value = false
                 }
-                // Indiquer que la vérification initiale est terminée
+            } catch (e: Exception) {
+                // Erreur lors de l'accès à la base de données
+                _isAuthenticated.value = false
                 _isInitialCheckInProgress.value = false
+                _loginState.value = LoginState.Error("Erreur d'accès aux données: ${e.message}")
             }
         }
     }
@@ -86,7 +112,19 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
-      fun logout() {
+
+    fun retryConnection() {
+        checkingEnabled = true
+        checkSavedCredentials()
+    }
+    
+    fun clearLoginError() {
+        if (_loginState.value is LoginState.Error) {
+            _loginState.value = LoginState.Idle
+        }
+    }
+
+    fun logout() {
         // Annuler d'abord le job de vérification des identifiants
         credentialCheckJob?.cancel()
         
