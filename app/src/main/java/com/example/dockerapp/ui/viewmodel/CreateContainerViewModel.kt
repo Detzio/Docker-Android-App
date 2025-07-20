@@ -72,13 +72,19 @@ class CreateContainerViewModel : ViewModel() {
                 try {
                     val volumesResponse = RetrofitClient.apiService.getVolumes()
                     if (volumesResponse.isSuccessful) {
-                        _volumes.value = volumesResponse.body()?.volumes ?: emptyList()
-                        Log.d(TAG, "Volumes loaded: ${_volumes.value.size}")
+                        val volumesList = volumesResponse.body()?.volumes ?: emptyList()
+                        _volumes.value = volumesList
+                        Log.d(TAG, "Volumes loaded: ${volumesList.size}")
+                        volumesList.forEach { volume ->
+                            Log.d(TAG, "Volume: ${volume.name} - Driver: ${volume.driver}")
+                        }
                     } else {
                         Log.e(TAG, "Error loading volumes: ${volumesResponse.code()}")
+                        _error.value = "Erreur lors du chargement des volumes: ${volumesResponse.code()}"
                     }
                 } catch (e: Exception) {
                     Log.e(TAG, "Error loading volumes", e)
+                    _error.value = "Erreur lors du chargement des volumes: ${e.message}"
                 }
                 
             } finally {

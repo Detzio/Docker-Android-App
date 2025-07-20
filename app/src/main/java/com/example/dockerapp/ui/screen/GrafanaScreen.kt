@@ -35,6 +35,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -155,6 +156,11 @@ private fun DockerMetricsContent(
 ) {
     val context = LocalContext.current
     
+    // Mémoriser les valeurs formatées pour éviter les recalculs
+    val formattedCpuUsage = remember(cpuUsage) { String.format("%.1f", cpuUsage) }
+    val formattedMemoryUsage = remember(memoryUsage) { formatBytes(memoryUsage) }
+    val containersSubtitle = remember(totalContainers, runningContainers) { "$runningContainers en cours" }
+    
     if (isLoading && cpuMetrics.isEmpty()) {
         Box(
             modifier = modifier.fillMaxSize(),
@@ -206,7 +212,7 @@ private fun DockerMetricsContent(
                         MetricSummaryCard(
                             title = "Conteneurs totaux",
                             value = totalContainers.toString(),
-                            subtitle = "$runningContainers en cours",
+                            subtitle = containersSubtitle,
                             modifier = Modifier.width(150.dp)
                         )
                     }
@@ -214,7 +220,7 @@ private fun DockerMetricsContent(
                     item {
                         MetricSummaryCard(
                             title = "CPU Moyen",
-                            value = "${String.format("%.1f", cpuUsage)}%",
+                            value = "${formattedCpuUsage}%",
                             subtitle = "Utilisation",
                             modifier = Modifier.width(150.dp)
                         )
@@ -223,7 +229,7 @@ private fun DockerMetricsContent(
                     item {
                         MetricSummaryCard(
                             title = "Mémoire",
-                            value = formatBytes(memoryUsage),
+                            value = formattedMemoryUsage,
                             subtitle = "Utilisée",
                             modifier = Modifier.width(150.dp)
                         )
@@ -231,9 +237,9 @@ private fun DockerMetricsContent(
                 }
             }
             
-            // Graphiques détaillés
+            // Graphiques détaillés - Optimisés avec key pour éviter la recomposition
             if (cpuMetrics.isNotEmpty()) {
-                item {
+                item(key = "cpu_chart") {
                     MetricChart(
                         title = "Utilisation CPU",
                         data = cpuMetrics,
@@ -245,7 +251,7 @@ private fun DockerMetricsContent(
             }
             
             if (memoryMetrics.isNotEmpty()) {
-                item {
+                item(key = "memory_chart") {
                     MetricChart(
                         title = "Utilisation Mémoire",
                         data = memoryMetrics,
@@ -257,7 +263,7 @@ private fun DockerMetricsContent(
             }
             
             if (networkMetrics.isNotEmpty()) {
-                item {
+                item(key = "network_chart") {
                     MetricChart(
                         title = "Trafic Réseau",
                         data = networkMetrics,
@@ -270,7 +276,7 @@ private fun DockerMetricsContent(
             
             // Bouton pour ouvrir Grafana externe
             if (grafanaUrl.isNotEmpty()) {
-                item {
+                item(key = "grafana_button") {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -324,7 +330,7 @@ private fun DockerMetricsContent(
             
             // Message d'erreur
             errorMessage?.let { error ->
-                item {
+                item(key = "error_message") {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(

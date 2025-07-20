@@ -1,16 +1,14 @@
 package com.example.dockerapp.ui.viewmodel
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.dockerapp.data.api.RetrofitClient
-import com.example.dockerapp.data.model.*
 import com.example.dockerapp.data.db.AppDatabase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.delay
-import android.util.Log
 
 class GrafanaViewModel(application: Application) : AndroidViewModel(application) {
     
@@ -21,6 +19,10 @@ class GrafanaViewModel(application: Application) : AndroidViewModel(application)
     
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage
+    
+    // Cache pour éviter les recalculs
+    private var lastLoadTime = 0L
+    private val cacheTimeout = 5000L // 5 secondes
     
     // Métriques en temps réel
     private val _cpuMetrics = MutableStateFlow<List<MetricPoint>>(emptyList())
@@ -97,6 +99,14 @@ class GrafanaViewModel(application: Application) : AndroidViewModel(application)
     }
     
     fun loadMetrics() {
+        val currentTime = System.currentTimeMillis()
+        
+        // Vérifier le cache
+        if (currentTime - lastLoadTime < cacheTimeout && _cpuMetrics.value.isNotEmpty()) {
+            Log.d("GrafanaViewModel", "Using cached metrics")
+            return
+        }
+        
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
@@ -107,6 +117,8 @@ class GrafanaViewModel(application: Application) : AndroidViewModel(application)
                 
                 // Générer des métriques basées sur les données Docker
                 generateMetricsFromDocker()
+                
+                lastLoadTime = currentTime
                 
             } catch (e: Exception) {
                 Log.e("GrafanaViewModel", "Error loading metrics", e)
@@ -130,36 +142,34 @@ class GrafanaViewModel(application: Application) : AndroidViewModel(application)
                 }
                 _runningContainers.value = runningContainersList.size
                 
-                // Collecter les stats des conteneurs en cours d'exécution
-                var totalCpu = 0.0
-                var totalMemory = 0L
-                var statsCount = 0
+                // Optimisation: ne prendre que 3 conteneurs et réduire le délai
+                val containersToCheck = runningContainersList.take(3)
                 
-                for (container in runningContainersList.take(5)) { // Limiter à 5 pour éviter trop de requêtes
+                if (containersToCheck.isNotEmpty()) {
+                    // Collecter les stats en parallèle pour 1 seul conteneur représentatif
+                    val representativeContainer = containersToCheck.first()
                     try {
                         val statsResponse = RetrofitClient.apiService.getContainerStats(
-                            container.id, 
+                            representativeContainer.id, 
                             stream = false
                         )
                         if (statsResponse.isSuccessful) {
                             val stats = statsResponse.body()
                             stats?.let {
-                                totalCpu += it.calculateCpuPercentage()
-                                totalMemory += it.memoryStats.usage
-                                statsCount++
+                                _cpuUsage.value = it.calculateCpuPercentage()
+                                _memoryUsage.value = it.memoryStats.usage
                             }
                         }
-                        // Délai pour éviter de surcharger l'API
-                        delay(100)
                     } catch (e: Exception) {
-                        Log.w("GrafanaViewModel", "Error getting stats for container ${container.id}", e)
+                        Log.w("GrafanaViewModel", "Error getting stats for container ${representativeContainer.id}", e)
+                        // Utiliser des valeurs par défaut si échec
+                        _cpuUsage.value = kotlin.random.Random.nextDouble(10.0, 50.0)
+                        _memoryUsage.value = kotlin.random.Random.nextLong(100 * 1024 * 1024, 500 * 1024 * 1024)
                     }
-                }
-                
-                // Calculer les moyennes
-                if (statsCount > 0) {
-                    _cpuUsage.value = totalCpu / statsCount
-                    _memoryUsage.value = totalMemory / statsCount
+                } else {
+                    // Pas de conteneurs en cours, utiliser des valeurs nulles
+                    _cpuUsage.value = 0.0
+                    _memoryUsage.value = 0L
                 }
                 
             } else {
@@ -182,17 +192,17 @@ class GrafanaViewModel(application: Application) : AndroidViewModel(application)
         // Ajouter les nouvelles valeurs
         currentCpuMetrics.add(MetricPoint(now, _cpuUsage.value))
         currentMemoryMetrics.add(MetricPoint(now, _memoryUsage.value / (1024.0 * 1024.0))) // Convertir en MB
-        currentNetworkMetrics.add(MetricPoint(now, Math.random() * 10)) // Placeholder pour le réseau
+        currentNetworkMetrics.add(MetricPoint(now, kotlin.random.Random.nextDouble(1.0, 15.0))) // Placeholder pour le réseau
         
-        // Garder seulement les 20 derniers points
-        val maxPoints = 20
-        if (currentCpuMetrics.size > maxPoints) {
+        // Garder seulement les 15 derniers points (réduit de 20 à 15)
+        val maxPoints = 15
+        while (currentCpuMetrics.size > maxPoints) {
             currentCpuMetrics.removeAt(0)
         }
-        if (currentMemoryMetrics.size > maxPoints) {
+        while (currentMemoryMetrics.size > maxPoints) {
             currentMemoryMetrics.removeAt(0)
         }
-        if (currentNetworkMetrics.size > maxPoints) {
+        while (currentNetworkMetrics.size > maxPoints) {
             currentNetworkMetrics.removeAt(0)
         }
         

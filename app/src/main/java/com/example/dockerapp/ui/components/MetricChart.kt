@@ -14,6 +14,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -27,6 +28,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.dockerapp.ui.theme.DockerBlue
 import com.example.dockerapp.ui.viewmodel.MetricPoint
+import kotlin.math.max
+import kotlin.math.min
 
 @Composable
 fun MetricChart(
@@ -94,46 +97,42 @@ private fun LineChart(
     color: Color,
     modifier: Modifier = Modifier
 ) {
+    // Utiliser remember pour éviter les recalculs des valeurs min/max
+    val chartData = remember(data) {
+        if (data.isEmpty()) return@remember null
+        
+        val minValue = data.minOfOrNull { it.value } ?: 0.0
+        val maxValue = data.maxOfOrNull { it.value } ?: 1.0
+        val valueRange = if (maxValue - minValue == 0.0) 1.0 else maxValue - minValue
+        
+        val minTime = data.minOfOrNull { it.timestamp } ?: 0L
+        val maxTime = data.maxOfOrNull { it.timestamp } ?: 1L
+        val timeRange = if (maxTime - minTime == 0L) 1L else maxTime - minTime
+        
+        ChartData(minValue, maxValue, valueRange, minTime, maxTime, timeRange)
+    }
+    
     Canvas(modifier = modifier) {
-        if (data.isEmpty()) return@Canvas
+        if (data.isEmpty() || chartData == null) return@Canvas
         
         val width = size.width
         val height = size.height
         val padding = 40f
         
-        // Calculer les valeurs min/max
-        val minValue = data.minOfOrNull { it.value } ?: 0.0
-        val maxValue = data.maxOfOrNull { it.value } ?: 1.0
-        val valueRange = maxValue - minValue
+        // Dessiner les axes (simplifié)
+        drawSimpleAxes(width, height, padding, Color.Gray)
         
-        val minTime = data.minOfOrNull { it.timestamp } ?: 0L
-        val maxTime = data.maxOfOrNull { it.timestamp } ?: 1L
-        val timeRange = maxTime - minTime
-        
-        // Dessiner les axes
-        drawAxes(
-            width = width,
-            height = height,
-            padding = padding,
-            color = Color.Gray
-        )
-        
-        // Dessiner les lignes de grille
-        drawGrid(
-            width = width,
-            height = height,
-            padding = padding,
-            color = Color.LightGray
-        )
+        // Dessiner la grille (réduite)
+        drawSimpleGrid(width, height, padding, Color.LightGray)
         
         // Préparer les points pour le graphique
         val points = data.map { point ->
-            val x = padding + ((point.timestamp - minTime).toFloat() / timeRange.toFloat()) * (width - 2 * padding)
-            val y = height - padding - ((point.value - minValue).toFloat() / valueRange.toFloat()) * (height - 2 * padding)
+            val x = padding + ((point.timestamp - chartData.minTime).toFloat() / chartData.timeRange.toFloat()) * (width - 2 * padding)
+            val y = height - padding - ((point.value - chartData.minValue).toFloat() / chartData.valueRange.toFloat()) * (height - 2 * padding)
             Offset(x, y)
         }
         
-        // Dessiner la ligne
+        // Dessiner la ligne (optimisé)
         if (points.size > 1) {
             val path = Path()
             path.moveTo(points[0].x, points[0].y)
@@ -145,30 +144,33 @@ private fun LineChart(
             drawPath(
                 path = path,
                 color = color,
-                style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
+                style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round)
             )
         }
         
-        // Dessiner les points
-        points.forEach { point ->
-            drawCircle(
-                color = color,
-                radius = 4.dp.toPx(),
-                center = point
-            )
+        // Dessiner moins de points pour améliorer les performances
+        if (points.size <= 10) {
+            points.forEach { point ->
+                drawCircle(
+                    color = color,
+                    radius = 3.dp.toPx(),
+                    center = point
+                )
+            }
         }
-        
-        // Dessiner les labels des valeurs
-        drawValueLabels(
-            minValue = minValue,
-            maxValue = maxValue,
-            height = height,
-            padding = padding
-        )
     }
 }
 
-private fun DrawScope.drawAxes(
+data class ChartData(
+    val minValue: Double,
+    val maxValue: Double,
+    val valueRange: Double,
+    val minTime: Long,
+    val maxTime: Long,
+    val timeRange: Long
+)
+
+private fun DrawScope.drawSimpleAxes(
     width: Float,
     height: Float,
     padding: Float,
@@ -179,7 +181,7 @@ private fun DrawScope.drawAxes(
         color = color,
         start = Offset(padding, height - padding),
         end = Offset(width - padding, height - padding),
-        strokeWidth = 2.dp.toPx()
+        strokeWidth = 1.dp.toPx()
     )
     
     // Axe Y (vertical)
@@ -187,41 +189,39 @@ private fun DrawScope.drawAxes(
         color = color,
         start = Offset(padding, padding),
         end = Offset(padding, height - padding),
-        strokeWidth = 2.dp.toPx()
+        strokeWidth = 1.dp.toPx()
     )
 }
 
-private fun DrawScope.drawGrid(
+private fun DrawScope.drawSimpleGrid(
     width: Float,
     height: Float,
     padding: Float,
     color: Color
 ) {
-    val gridLines = 5
+    val gridLines = 3 // Réduit de 5 à 3 pour moins de calculs
     val stepX = (width - 2 * padding) / gridLines
     val stepY = (height - 2 * padding) / gridLines
     
-    // Lignes verticales
+    // Lignes verticales (réduites)
     for (i in 1 until gridLines) {
         val x = padding + i * stepX
         drawLine(
             color = color,
             start = Offset(x, padding),
             end = Offset(x, height - padding),
-            strokeWidth = 1.dp.toPx(),
-            pathEffect = PathEffect.dashPathEffect(floatArrayOf(5f, 5f))
+            strokeWidth = 0.5.dp.toPx()
         )
     }
     
-    // Lignes horizontales
+    // Lignes horizontales (réduites)
     for (i in 1 until gridLines) {
         val y = padding + i * stepY
         drawLine(
             color = color,
             start = Offset(padding, y),
             end = Offset(width - padding, y),
-            strokeWidth = 1.dp.toPx(),
-            pathEffect = PathEffect.dashPathEffect(floatArrayOf(5f, 5f))
+            strokeWidth = 0.5.dp.toPx()
         )
     }
 }

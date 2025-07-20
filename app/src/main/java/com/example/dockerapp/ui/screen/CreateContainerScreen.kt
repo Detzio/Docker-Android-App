@@ -309,7 +309,7 @@ fun CreateContainerScreen(
                                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                                         verticalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
-                                        volumes.take(3).forEach { volume ->
+                                        volumes.forEach { volume ->
                                             VolumeCard(volume = volume)
                                         }
                                     }
