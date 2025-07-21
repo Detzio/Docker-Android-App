@@ -34,7 +34,8 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
         repository = AuthRepository(database.userCredentialsDao())
         checkSavedCredentials()
     }
-      private fun checkSavedCredentials() {
+    
+    private fun checkSavedCredentials() {
         // Annuler tout job existant avant d'en créer un nouveau
         credentialCheckJob?.cancel()
         

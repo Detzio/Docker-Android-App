@@ -28,9 +28,4 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
-    override fun onResume() {
-        super.onResume()
-        // Forcer la revérification des credentials quand l'app revient au premier plan
-    }
 }

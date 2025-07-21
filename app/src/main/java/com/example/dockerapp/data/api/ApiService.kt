@@ -41,7 +41,8 @@ interface ApiService {
         @Path("id") containerId: String,
         @Query("stream") stream: Boolean
     ): Response<ContainerStats>
-      @GET("containers/{id}/logs")
+    
+    @GET("containers/{id}/logs")
     suspend fun getContainerLogs(
         @Path("id") containerId: String,
         @Query("stdout") stdout: Boolean = true,

@@ -20,7 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -28,8 +27,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.dockerapp.ui.theme.DockerBlue
 import com.example.dockerapp.ui.viewmodel.MetricPoint
-import kotlin.math.max
-import kotlin.math.min
 
 @Composable
 fun MetricChart(
@@ -223,22 +220,6 @@ private fun DrawScope.drawSimpleGrid(
             end = Offset(width - padding, y),
             strokeWidth = 0.5.dp.toPx()
         )
-    }
-}
-
-private fun drawValueLabels(
-    minValue: Double,
-    maxValue: Double,
-    height: Float,
-    padding: Float
-) {
-    val valueRange = maxValue - minValue
-    val steps = 5
-    
-    for (i in 0..steps) {
-        val value = minValue + (valueRange * i / steps)
-        height - padding - ((value - minValue).toFloat() / valueRange.toFloat()) * (height - 2 * padding)
-    
     }
 }
 

@@ -211,11 +211,7 @@ class GrafanaViewModel(application: Application) : AndroidViewModel(application)
         _memoryMetrics.value = currentMemoryMetrics
         _networkMetrics.value = currentNetworkMetrics
     }
-    
-    fun clearError() {
-        _errorMessage.value = null
-    }
-    
+
     fun refreshGrafanaUrl() {
         buildGrafanaUrl()
     }
